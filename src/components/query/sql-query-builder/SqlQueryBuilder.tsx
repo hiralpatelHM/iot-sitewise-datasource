@@ -2,130 +2,15 @@ import React, { useState } from 'react';
 import { Select, Input, IconButton, Tooltip, Alert } from '@grafana/ui';
 import { QueryType } from 'types';
 import { EditorField, EditorFieldGroup, EditorRow, EditorRows } from '@grafana/plugin-ui';
+import { FromSQLBuilder } from './FromSQLBuilderClause';
+import { SelectSQLBuilderClause } from './SelectSQLBuilderClause';
+import { AssetProperty, mockAssetModels, SitewiseQueryState, WhereCondition } from './types';
 
 interface SqlQueryBuilderProps {
   query: any;
   onChange: (query: any) => void;
   datasource: any;
 }
-
-// Mock SiteWise data structures
-interface AssetModel {
-  id: string;
-  name: string;
-  properties: AssetProperty[];
-}
-
-interface Asset {
-  id: string;
-  name: string;
-  modelId: string;
-  hierarchy: string[];
-  tags: Record<string, string>;
-}
-
-interface AssetProperty {
-  id: string;
-  name: string;
-  dataType: 'STRING' | 'INTEGER' | 'DOUBLE' | 'BOOLEAN' | 'STRUCT';
-  alias?: string;
-}
-
-// Mock data - replace with actual SiteWise API calls
-const mockAssetModels: AssetModel[] = [
-  {
-    id: 'asset',
-    name: 'asset',
-    properties: [
-      { id: 'asset_id', name: 'asset_id', dataType: 'DOUBLE' },
-      { id: 'asset_name', name: 'asset_name', dataType: 'STRING' },
-      { id: 'asset_description', name: 'asset_description', dataType: 'STRING' },
-      { id: 'asset_model_id', name: 'asset_model_id', dataType: 'DOUBLE' },
-    ],
-  },
-  {
-    id: 'asset_property',
-    name: 'asset_property',
-    properties: [
-      { id: 'property_id', name: 'property_id', dataType: 'DOUBLE' },
-      { id: 'asset_id', name: 'asset_id', dataType: 'DOUBLE' },
-      { id: 'asset_composite_model_id', name: 'asset_composite_model_id', dataType: 'DOUBLE' },
-      { id: 'property_name', name: 'property_name', dataType: 'BOOLEAN' },
-      { id: 'property_alias', name: 'property_alias', dataType: 'BOOLEAN' },
-    ],
-  },
-  {
-    id: 'raw_time_series',
-    name: 'raw_time_series',
-    properties: [
-      { id: 'property_id', name: 'property_id', dataType: 'DOUBLE' },
-      { id: 'asset_id', name: 'asset_id', dataType: 'DOUBLE' },
-      { id: 'property_alias', name: 'property_alias', dataType: 'STRING' },
-      { id: 'event_timestamp', name: 'event_timestamp', dataType: 'DOUBLE' },
-      { id: 'quality', name: 'quality', dataType: 'STRING' },
-      { id: 'boolean_value', name: 'boolean_value', dataType: 'BOOLEAN' },
-      { id: 'int_value', name: 'int_value', dataType: 'INTEGER' },
-      { id: 'double_value', name: 'double_value', dataType: 'DOUBLE' },
-      { id: 'string_value', name: 'string_value', dataType: 'STRING' },
-    ],
-  },
-  {
-    id: 'latest_value_time_series',
-    name: 'latest_value_time_series',
-    properties: [
-      { id: 'property_id', name: 'property_id', dataType: 'DOUBLE' },
-      { id: 'asset_id', name: 'asset_id', dataType: 'DOUBLE' },
-      { id: 'property_alias', name: 'property_alias', dataType: 'STRING' },
-      { id: 'event_timestamp', name: 'event_timestamp', dataType: 'DOUBLE' },
-      { id: 'quality', name: 'quality', dataType: 'STRING' },
-      { id: 'boolean_value', name: 'boolean_value', dataType: 'BOOLEAN' },
-      { id: 'int_value', name: 'int_value', dataType: 'INTEGER' },
-      { id: 'double_value', name: 'double_value', dataType: 'DOUBLE' },
-      { id: 'string_value', name: 'string_value', dataType: 'STRING' },
-    ],
-  },
-  {
-    id: 'precomputed_aggregates',
-    name: 'precomputed_aggregates',
-    properties: [
-      { id: 'rpm-1', name: 'RPM', dataType: 'DOUBLE' },
-      { id: 'torque-1', name: 'Torque', dataType: 'DOUBLE' },
-      { id: 'vibration-1', name: 'Vibration', dataType: 'DOUBLE' },
-      { id: 'efficiency-1', name: 'Efficiency', dataType: 'DOUBLE' },
-    ],
-  },
-];
-
-const mockAssets: Asset[] = [
-  {
-    id: 'asset-1',
-    name: 'Factory Floor Sensor 1',
-    modelId: 'asset',
-    hierarchy: ['Factory', 'Floor 1', 'Zone A'],
-    tags: { location: 'Zone A', criticality: 'High', department: 'Production' },
-  },
-  {
-    id: 'asset-2',
-    name: 'Factory Floor Sensor 2',
-    modelId: 'asset',
-    hierarchy: ['Factory', 'Floor 1', 'Zone B'],
-    tags: { location: 'Zone B', criticality: 'Medium', department: 'Production' },
-  },
-  {
-    id: 'asset-3',
-    name: 'Pressure Monitor A',
-    modelId: 'asset_property',
-    hierarchy: ['Factory', 'Floor 2', 'Pump Room'],
-    tags: { location: 'Pump Room', criticality: 'Critical', department: 'Maintenance' },
-  },
-  {
-    id: 'asset-4',
-    name: 'Main Motor Unit',
-    modelId: 'raw_time_series',
-    hierarchy: ['Factory', 'Floor 1', 'Motor Bay'],
-    tags: { location: 'Motor Bay', criticality: 'Critical', department: 'Production' },
-  },
-];
 const timeIntervalProperty: AssetProperty = {
   id: 'timeInterval',
   name: 'Time Interval',
@@ -145,20 +30,6 @@ const whereOperators = [
   { label: 'CONTAINS', value: 'CONTAINS' },
 ];
 
-const aggregationFunctions = [
-  { label: 'avg()', value: 'AVERAGE', group: 'Aggregations' },
-  { label: 'sum()', value: 'SUM', group: 'Aggregations' },
-  { label: 'min()', value: 'MINIMUM', group: 'Aggregations' },
-  { label: 'max()', value: 'MAXIMUM', group: 'Aggregations' },
-  { label: 'count()', value: 'COUNT', group: 'Aggregations' },
-  { label: 'stddev()', value: 'STANDARD_DEVIATION', group: 'Aggregations' },
-  { label: 'first()', value: 'FIRST', group: 'Selectors' },
-  { label: 'last()', value: 'LAST', group: 'Selectors' },
-  { label: 'difference()', value: 'DIFFERENCE', group: 'Transformations' },
-  { label: 'derivative()', value: 'DERIVATIVE', group: 'Transformations' },
-  { label: 'alias()', value: 'ALIAS', group: 'Transformations' },
-];
-
 const timeIntervals = [
   { label: '1s', value: '1s' },
   { label: '5s', value: '5s' },
@@ -176,42 +47,6 @@ const timeIntervals = [
   { label: '1d', value: '1d' },
 ];
 
-// const timezones = [
-//   { label: 'UTC', value: 'UTC' },
-//   { label: 'America/New_York', value: 'America/New_York' },
-//   { label: 'America/Los_Angeles', value: 'America/Los_Angeles' },
-//   { label: 'Europe/London', value: 'Europe/London' },
-//   { label: 'Europe/Paris', value: 'Europe/Paris' },
-//   { label: 'Asia/Tokyo', value: 'Asia/Tokyo' },
-//   { label: 'Asia/Shanghai', value: 'Asia/Shanghai' },
-// ];
-
-interface SelectField {
-  column: string;
-  aggregation?: string;
-  alias?: string;
-}
-
-interface WhereCondition {
-  column: string;
-  operator: string;
-  value: string;
-  logicalOperator: 'AND' | 'OR';
-}
-
-interface SitewiseQueryState {
-  selectedAssetModel?: string;
-  selectedAssets: string[];
-  selectFields: SelectField[];
-  whereConditions: WhereCondition[];
-  groupByTime?: string;
-  groupByTags: string[];
-  orderBy: 'ASC' | 'DESC';
-  limit?: number;
-  timezone: string;
-  rawQueryMode: boolean;
-}
-
 export function SqlQueryBuilder({ query, onChange, datasource }: SqlQueryBuilderProps) {
   const [queryState, setQueryState] = useState<SitewiseQueryState>({
     selectedAssetModel: query.assetModel || '',
@@ -227,23 +62,12 @@ export function SqlQueryBuilder({ query, onChange, datasource }: SqlQueryBuilder
   });
 
   const selectedModel = mockAssetModels.find((model) => model.id === queryState.selectedAssetModel);
-  const availableAssets = mockAssets.filter((asset) => asset.modelId === queryState.selectedAssetModel);
   const availableProperties = selectedModel?.properties || [];
   const availablePropertiesForGrouping: AssetProperty[] = [timeIntervalProperty, ...availableProperties];
-
-  // Get all unique tag keys from selected assets
-  const availableTagKeys = Array.from(
-    new Set(
-      availableAssets
-        .filter((asset) => queryState.selectedAssets.includes(asset.id))
-        .flatMap((asset) => Object.keys(asset.tags))
-    )
-  );
 
   const updateQuery = (newState: Partial<SitewiseQueryState>) => {
     const updatedState = { ...queryState, ...newState };
     setQueryState(updatedState);
-
     const newQuery = {
       ...query,
       queryType: QueryType.ExecuteQuery,
@@ -257,26 +81,7 @@ export function SqlQueryBuilder({ query, onChange, datasource }: SqlQueryBuilder
       limit: updatedState.limit,
       timezone: updatedState.timezone,
     };
-
     onChange(newQuery);
-  };
-
-  const addSelectField = () => {
-    const newFields = [...queryState.selectFields, { column: '', aggregation: '', alias: '' }];
-    updateQuery({ selectFields: newFields });
-  };
-
-  const removeSelectField = (index: number) => {
-    if (queryState.selectFields.length > 1) {
-      const newFields = queryState.selectFields.filter((_, i) => i !== index);
-      updateQuery({ selectFields: newFields });
-    }
-  };
-
-  const updateSelectField = (index: number, field: Partial<SelectField>) => {
-    const newFields = [...queryState.selectFields];
-    newFields[index] = { ...newFields[index], ...field };
-    updateQuery({ selectFields: newFields });
   };
 
   const addWhereCondition = () => {
@@ -350,80 +155,18 @@ export function SqlQueryBuilder({ query, onChange, datasource }: SqlQueryBuilder
     <div className="gf-form-group">
       {/* FROM Section */}
       <EditorRows>
-        <EditorRow>
-          <EditorFieldGroup>
-            <EditorField label="From" width={40}>
-              <Select
-                options={mockAssetModels.map((model) => ({
-                  label: model.name,
-                  value: model.id,
-                }))}
-                value={queryState.selectedAssetModel}
-                onChange={(option) =>
-                  updateQuery({
-                    selectedAssetModel: option?.value || '',
-                  })
-                }
-                placeholder="Select model..."
-              />
-            </EditorField>
-          </EditorFieldGroup>
-        </EditorRow>
+        <FromSQLBuilder
+          assetModels={mockAssetModels}
+          selectedModelId={queryState.selectedAssetModel || ''}
+          updateQuery={updateQuery}
+        />
 
         {/* SELECT Section */}
-        {queryState.selectFields.map((field, index) => (
-          <EditorRow key={index}>
-            <EditorFieldGroup>
-              <EditorField label={index === 0 ? 'Select' : ''} width={30}>
-                <Select
-                  options={availableProperties.map((prop) => ({
-                    label: `${prop.name}`,
-                    value: prop.id,
-                  }))}
-                  value={field.column}
-                  onChange={(option) => updateSelectField(index, { column: option?.value || '' })}
-                  placeholder="Select property..."
-                />
-              </EditorField>
-
-              <EditorField label={index === 0 ? 'Function' : ''} width={30}>
-                <Select
-                  options={[
-                    { label: 'Raw Values', value: '' },
-                    ...aggregationFunctions.map((func) => ({
-                      label: `${func.group}: ${func.label}`,
-                      value: func.value,
-                    })),
-                  ]}
-                  value={field.aggregation}
-                  onChange={(option) => updateSelectField(index, { aggregation: option?.value || '' })}
-                  placeholder="No function"
-                />
-              </EditorField>
-
-              <EditorField label={index === 0 ? 'Alias' : ''} width={25}>
-                <Input
-                  value={field.alias}
-                  onChange={(e) => updateSelectField(index, { alias: e.currentTarget.value })}
-                  placeholder="Optional alias"
-                />
-              </EditorField>
-
-              <EditorField label={index === 0 ? 'Actions' : ''} width={15}>
-                <div>
-                  <Tooltip content="Add field">
-                    <IconButton name="plus" onClick={addSelectField} aria-label="Add field" />
-                  </Tooltip>
-                  {queryState.selectFields.length > 1 && (
-                    <Tooltip content="Remove field">
-                      <IconButton name="minus" onClick={() => removeSelectField(index)} aria-label="Remove field" />
-                    </Tooltip>
-                  )}
-                </div>
-              </EditorField>
-            </EditorFieldGroup>
-          </EditorRow>
-        ))}
+        <SelectSQLBuilderClause
+          selectFields={queryState.selectFields}
+          updateQuery={updateQuery}
+          availableProperties={availableProperties}
+        />
 
         {/* WHERE Section */}
         <EditorRow>
@@ -452,10 +195,6 @@ export function SqlQueryBuilder({ query, onChange, datasource }: SqlQueryBuilder
                       ...availableProperties.map((prop) => ({
                         label: prop.name,
                         value: prop.id,
-                      })),
-                      ...availableTagKeys.map((tag) => ({
-                        label: `tag.${tag}`,
-                        value: `tag.${tag}`,
                       })),
                     ]}
                     value={condition.column}
@@ -550,7 +289,7 @@ export function SqlQueryBuilder({ query, onChange, datasource }: SqlQueryBuilder
               <Input
                 type="number"
                 value={queryState.limit}
-                onChange={(e) => updateQuery({ limit: parseInt(e.currentTarget.value) || 1000 })}
+                onChange={(e) => updateQuery({ limit: parseInt(e.currentTarget.value, 10) || 1000 })}
               />
             </EditorField>
 

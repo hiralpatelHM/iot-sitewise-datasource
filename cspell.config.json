@@ -97,6 +97,9 @@
     "awsauth",
     "httpclient",
     "propid",
-    "smithyhttp"
+    "smithyhttp",
+    "LTRIM",
+    "RTRIM",
+    "TRIM"
   ]
 }
