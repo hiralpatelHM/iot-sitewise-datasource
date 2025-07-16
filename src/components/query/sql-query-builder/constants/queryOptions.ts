@@ -50,3 +50,35 @@ export const timeIntervals = [
 //   { label: 'Asia/Tokyo', value: 'Asia/Tokyo' },
 //   { label: 'Asia/Shanghai', value: 'Asia/Shanghai' },
 // ];
+
+export const allFunctions: Array<{
+  group: string;
+  label: string;
+  value: string;
+}> = [
+  { group: 'Aggregate', label: 'Raw Values', value: '' },
+  { group: 'Aggregate', label: 'AVG', value: 'AVG' },
+  { group: 'Aggregate', label: 'SUM', value: 'SUM' },
+  { group: 'String', label: 'LENGTH', value: 'LENGTH' },
+  { group: 'String', label: 'CONCAT', value: 'CONCAT' },
+  { group: 'String', label: 'SUBSTR', value: 'SUBSTR' },
+  { group: 'String', label: 'UPPER', value: 'UPPER' },
+  { group: 'String', label: 'LOWER', value: 'LOWER' },
+  { group: 'String', label: 'TRIM', value: 'TRIM' },
+  { group: 'String', label: 'LTRIM', value: 'LTRIM' },
+  { group: 'String', label: 'RTRIM', value: 'RTRIM' },
+  { group: 'String', label: 'STR_REPLACE', value: 'STR_REPLACE' },
+  { group: 'Math', label: 'POWER', value: 'POWER' },
+  { group: 'Math', label: 'ROUND', value: 'ROUND' },
+  { group: 'Math', label: 'FLOOR', value: 'FLOOR' },
+  { group: 'DateTime', label: 'NOW', value: 'NOW' },
+  { group: 'DateTime', label: 'YEAR', value: 'YEAR' },
+  { group: 'DateTime', label: 'MONTH', value: 'MONTH' },
+  { group: 'DateTime', label: 'DAY', value: 'DAY' },
+  { group: 'DateTime', label: 'HOUR', value: 'HOUR' },
+  { group: 'DateTime', label: 'MINUTE', value: 'MINUTE' },
+  { group: 'DateTime', label: 'SECOND', value: 'SECOND' },
+  { group: 'DateTime', label: 'TIMEZONE_HOUR', value: 'TIMEZONE_HOUR' },
+  { group: 'DateTime', label: 'TIMEZONE_MINUTE', value: 'TIMEZONE_MINUTE' },
+  { group: 'Null', label: 'COALESCE', value: 'COALESCE' },
+];

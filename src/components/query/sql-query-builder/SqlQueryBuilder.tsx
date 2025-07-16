@@ -2,36 +2,12 @@ import React, { useState } from 'react';
 import { Select, Input, IconButton, Tooltip, Alert } from '@grafana/ui';
 import { QueryType } from 'types';
 import { EditorField, EditorFieldGroup, EditorRow, EditorRows } from '@grafana/plugin-ui';
-import { SqlQueryBuilderProps } from './types';
-import { AssetProperty, mockAssetModels, mockAssets } from './constants/assetModels';
+import { SitewiseQueryState, SqlQueryBuilderProps, WhereCondition } from './types';
+import { AssetProperty, mockAssetModels } from './constants/assetModels';
 import { timeIntervalProperty } from './constants/fields';
-import { whereOperators, aggregationFunctions, timeIntervals } from './constants/queryOptions';
-
-interface SelectField {
-  column: string;
-  aggregation?: string;
-  alias?: string;
-}
-
-interface WhereCondition {
-  column: string;
-  operator: string;
-  value: string;
-  logicalOperator: 'AND' | 'OR';
-}
-
-interface SitewiseQueryState {
-  selectedAssetModel?: string;
-  selectedAssets: string[];
-  selectFields: SelectField[];
-  whereConditions: WhereCondition[];
-  groupByTime?: string;
-  groupByTags: string[];
-  orderBy: 'ASC' | 'DESC';
-  limit?: number;
-  timezone: string;
-  rawQueryMode: boolean;
-}
+import { whereOperators, timeIntervals } from './constants/queryOptions';
+import { FromSQLBuilder } from './FromSQLBuilderClause';
+import { SelectSQLBuilderClause } from './SelectSQLBuilderClause';
 
 export function SqlQueryBuilder({ query, onChange, datasource }: SqlQueryBuilderProps) {
   const [queryState, setQueryState] = useState<SitewiseQueryState>({
@@ -48,23 +24,12 @@ export function SqlQueryBuilder({ query, onChange, datasource }: SqlQueryBuilder
   });
 
   const selectedModel = mockAssetModels.find((model) => model.id === queryState.selectedAssetModel);
-  const availableAssets = mockAssets.filter((asset) => asset.modelId === queryState.selectedAssetModel);
   const availableProperties = selectedModel?.properties || [];
   const availablePropertiesForGrouping: AssetProperty[] = [timeIntervalProperty, ...availableProperties];
-
-  // Get all unique tag keys from selected assets
-  const availableTagKeys = Array.from(
-    new Set(
-      availableAssets
-        .filter((asset) => queryState.selectedAssets.includes(asset.id))
-        .flatMap((asset) => Object.keys(asset.tags))
-    )
-  );
 
   const updateQuery = (newState: Partial<SitewiseQueryState>) => {
     const updatedState = { ...queryState, ...newState };
     setQueryState(updatedState);
-
     const newQuery = {
       ...query,
       queryType: QueryType.ExecuteQuery,
@@ -78,26 +43,7 @@ export function SqlQueryBuilder({ query, onChange, datasource }: SqlQueryBuilder
       limit: updatedState.limit,
       timezone: updatedState.timezone,
     };
-
     onChange(newQuery);
-  };
-
-  const addSelectField = () => {
-    const newFields = [...queryState.selectFields, { column: '', aggregation: '', alias: '' }];
-    updateQuery({ selectFields: newFields });
-  };
-
-  const removeSelectField = (index: number) => {
-    if (queryState.selectFields.length > 1) {
-      const newFields = queryState.selectFields.filter((_, i) => i !== index);
-      updateQuery({ selectFields: newFields });
-    }
-  };
-
-  const updateSelectField = (index: number, field: Partial<SelectField>) => {
-    const newFields = [...queryState.selectFields];
-    newFields[index] = { ...newFields[index], ...field };
-    updateQuery({ selectFields: newFields });
   };
 
   const addWhereCondition = () => {
@@ -171,80 +117,18 @@ export function SqlQueryBuilder({ query, onChange, datasource }: SqlQueryBuilder
     <div className="gf-form-group">
       {/* FROM Section */}
       <EditorRows>
-        <EditorRow>
-          <EditorFieldGroup>
-            <EditorField label="From" width={40}>
-              <Select
-                options={mockAssetModels.map((model) => ({
-                  label: model.name,
-                  value: model.id,
-                }))}
-                value={queryState.selectedAssetModel}
-                onChange={(option) =>
-                  updateQuery({
-                    selectedAssetModel: option?.value || '',
-                  })
-                }
-                placeholder="Select model..."
-              />
-            </EditorField>
-          </EditorFieldGroup>
-        </EditorRow>
+        <FromSQLBuilder
+          assetModels={mockAssetModels}
+          selectedModelId={queryState.selectedAssetModel || ''}
+          updateQuery={updateQuery}
+        />
 
         {/* SELECT Section */}
-        {queryState.selectFields.map((field, index) => (
-          <EditorRow key={index}>
-            <EditorFieldGroup>
-              <EditorField label={index === 0 ? 'Select' : ''} width={30}>
-                <Select
-                  options={availableProperties.map((prop) => ({
-                    label: `${prop.name}`,
-                    value: prop.id,
-                  }))}
-                  value={field.column}
-                  onChange={(option) => updateSelectField(index, { column: option?.value || '' })}
-                  placeholder="Select property..."
-                />
-              </EditorField>
-
-              <EditorField label={index === 0 ? 'Function' : ''} width={30}>
-                <Select
-                  options={[
-                    { label: 'Raw Values', value: '' },
-                    ...aggregationFunctions.map((func) => ({
-                      label: `${func.group}: ${func.label}`,
-                      value: func.value,
-                    })),
-                  ]}
-                  value={field.aggregation}
-                  onChange={(option) => updateSelectField(index, { aggregation: option?.value || '' })}
-                  placeholder="No function"
-                />
-              </EditorField>
-
-              <EditorField label={index === 0 ? 'Alias' : ''} width={25}>
-                <Input
-                  value={field.alias}
-                  onChange={(e) => updateSelectField(index, { alias: e.currentTarget.value })}
-                  placeholder="Optional alias"
-                />
-              </EditorField>
-
-              <EditorField label={index === 0 ? 'Actions' : ''} width={15}>
-                <div>
-                  <Tooltip content="Add field">
-                    <IconButton name="plus" onClick={addSelectField} aria-label="Add field" />
-                  </Tooltip>
-                  {queryState.selectFields.length > 1 && (
-                    <Tooltip content="Remove field">
-                      <IconButton name="minus" onClick={() => removeSelectField(index)} aria-label="Remove field" />
-                    </Tooltip>
-                  )}
-                </div>
-              </EditorField>
-            </EditorFieldGroup>
-          </EditorRow>
-        ))}
+        <SelectSQLBuilderClause
+          selectFields={queryState.selectFields}
+          updateQuery={updateQuery}
+          availableProperties={availableProperties}
+        />
 
         {/* WHERE Section */}
         <EditorRow>
@@ -273,10 +157,6 @@ export function SqlQueryBuilder({ query, onChange, datasource }: SqlQueryBuilder
                       ...availableProperties.map((prop) => ({
                         label: prop.name,
                         value: prop.id,
-                      })),
-                      ...availableTagKeys.map((tag) => ({
-                        label: `tag.${tag}`,
-                        value: `tag.${tag}`,
                       })),
                     ]}
                     value={condition.column}
@@ -371,7 +251,7 @@ export function SqlQueryBuilder({ query, onChange, datasource }: SqlQueryBuilder
               <Input
                 type="number"
                 value={queryState.limit}
-                onChange={(e) => updateQuery({ limit: parseInt(e.currentTarget.value) || 1000 })}
+                onChange={(e) => updateQuery({ limit: parseInt(e.currentTarget.value, 10) || 1000 })}
               />
             </EditorField>
 
