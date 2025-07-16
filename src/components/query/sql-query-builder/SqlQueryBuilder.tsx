@@ -2,10 +2,16 @@ import React, { useState } from 'react';
 import { Select, Input, IconButton, Tooltip, Alert } from '@grafana/ui';
 import { QueryType } from 'types';
 import { EditorField, EditorFieldGroup, EditorRow, EditorRows } from '@grafana/plugin-ui';
-import { SitewiseQueryState, SqlQueryBuilderProps, WhereCondition } from './types';
-import { AssetProperty, mockAssetModels } from './constants/assetModels';
-import { timeIntervalProperty } from './constants/fields';
-import { whereOperators, timeIntervals } from './constants/queryOptions';
+import {
+  SitewiseQueryState,
+  SqlQueryBuilderProps,
+  WhereCondition,
+  AssetProperty,
+  mockAssetModels,
+  timeIntervalProperty,
+  whereOperators,
+  timeIntervals,
+} from './types';
 import { FromSQLBuilder } from './FromSQLBuilderClause';
 import { SelectSQLBuilderClause } from './SelectSQLBuilderClause';
 
