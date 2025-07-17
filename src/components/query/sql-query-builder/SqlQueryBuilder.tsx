@@ -13,7 +13,7 @@ import {
 import { FromSQLBuilder } from './FromSQLBuilderClause';
 import { SelectSQLBuilderClause } from './SelectSQLBuilderClause';
 import { WhereSQLBuilderClause } from './WhereSQLBuilderClause';
-// import { GroupBySQLBuilderClause } from './GroupBySQLBuilderClause';
+import { GroupBySQLBuilderClause } from './GroupBySQLBuilderClause';
 
 export function SqlQueryBuilder({ query, onChange, datasource }: SqlQueryBuilderProps) {
   const [queryState, setQueryState] = useState<SitewiseQueryState>({
@@ -52,8 +52,10 @@ export function SqlQueryBuilder({ query, onChange, datasource }: SqlQueryBuilder
   const availablePropertiesForGrouping: AssetProperty[] = [timeIntervalProperty, ...availableProperties];
 
   const updateQuery = (newState: Partial<SitewiseQueryState>) => {
-    const updatedState = { ...queryState, ...newState };
-    setQueryState(updatedState);
+    setQueryState((queryState) => ({
+      ...queryState,
+      ...newState,
+    }));
     const newQuery = {
       ...query,
       rawSQL: generateQueryPreview(),
@@ -134,12 +136,13 @@ export function SqlQueryBuilder({ query, onChange, datasource }: SqlQueryBuilder
         />
 
         {/* GROUP BY Section */}
-        {/* <GroupBySQLBuilderClause
-        availablePropertiesForGrouping={availablePropertiesForGrouping} // array of { id, name }
-        groupByTags={queryState.groupByTags}
-        groupByTime={queryState.groupByTime || ''}
-        updateQuery={updateQuery}
-      /> */}
+        <GroupBySQLBuilderClause
+          availablePropertiesForGrouping={availablePropertiesForGrouping} // array of { id, name }
+          groupByTags={queryState.groupByTags}
+          groupByTime={queryState.groupByTime || ''}
+          label="GROUP BY"
+          updateQuery={updateQuery}
+        />
         <EditorRow>
           <EditorFieldGroup>
             <EditorField label="" width={10}>
