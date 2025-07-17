@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Select, Input, Alert, InlineLabel } from '@grafana/ui';
 // import { QueryType } from 'types';
 import { EditorField, EditorFieldGroup, EditorRow, EditorRows } from '@grafana/plugin-ui';
@@ -15,58 +15,30 @@ import { SelectSQLBuilderClause } from './SelectSQLBuilderClause';
 import { WhereSQLBuilderClause } from './WhereSQLBuilderClause';
 // import { GroupBySQLBuilderClause } from './GroupBySQLBuilderClause';
 
-export function SqlQueryBuilder({ query, onChange, datasource }: SqlQueryBuilderProps) {
-  const [queryState, setQueryState] = useState<SitewiseQueryState>({
-    selectedAssetModel: query.assetModel || '',
-    selectedAssets: query.assets || [],
-    selectFields: query.selectFields || [{ column: '', aggregation: '', alias: '' }],
-    whereConditions: query.whereConditions || [{ column: '', operator: '', value: '', logicalOperator: 'AND' }],
-    groupByTime: query.groupByTime || '',
-    groupByTags: query.groupByTags || [],
-    orderBy: query.orderBy === 'ASC' || query.orderBy === 'DESC' ? query.orderBy : 'ASC',
-    limit: query.limit || 1000,
-    timezone: query.timezone || 'UTC',
-    rawQueryMode: false,
-  });
-
+export function SqlQueryBuilder({ query, onChange }: SqlQueryBuilderProps) {
+  const [queryState, setQueryState] = useState<SitewiseQueryState>(query);
+  const queryStateRef = useRef(queryState);
   useEffect(() => {
-    if (!query.rawQueryMode) {
-      onChange({
-        ...query,
-        assetModel: queryState.selectedAssetModel,
-        assets: queryState.selectedAssets,
-        selectFields: queryState.selectFields,
-        whereConditions: queryState.whereConditions,
-        groupByTime: queryState.groupByTime,
-        groupByTags: queryState.groupByTags,
-        orderBy: queryState.orderBy,
-        limit: queryState.limit,
-        timezone: queryState.timezone,
-        rawSQL: query.rawSQL,
-      });
-    }
-  }, [queryState, query, onChange]);
+    queryStateRef.current = queryState;
+    onChange(queryState);
+  }, [queryState]);
 
   const selectedModel = mockAssetModels.find((model) => model.id === queryState.selectedAssetModel);
   const availableProperties = selectedModel?.properties || [];
   const availablePropertiesForGrouping: AssetProperty[] = [timeIntervalProperty, ...availableProperties];
 
-  const updateQuery = (newState: Partial<SitewiseQueryState>) => {
-    const updatedState = { ...queryState, ...newState };
-    setQueryState(updatedState);
-    const newQuery = {
-      ...query,
-      rawSQL: generateQueryPreview(),
-    };
-    onChange(newQuery);
+  const updateQuery = async (newState: Partial<SitewiseQueryState>) => {
+    const updatedState = { ...queryStateRef.current, ...newState };
+    const rawSQL = await generateQueryPreview(updatedState);
+    setQueryState({ ...updatedState, rawSQL });
   };
 
-  const generateQueryPreview = () => {
-    if (!queryState.selectedAssetModel) {
+  const generateQueryPreview = async (updatedState: SitewiseQueryState): Promise<string> => {
+    if (!updatedState.selectedAssetModel) {
       return 'Select an asset model to build your query';
     }
 
-    const selectedProperties = queryState.selectFields
+    const selectedProperties = updatedState.selectFields
       .filter((field) => field.column)
       .map((field) => {
         const property = availableProperties.find((p) => p.id === field.column);
@@ -80,31 +52,31 @@ export function SqlQueryBuilder({ query, onChange, datasource }: SqlQueryBuilder
         return name;
       });
 
-    let preview = `select ${selectedProperties.join(', ')} from ${queryState.selectedAssetModel}`;
+    let preview = `SELECT ${selectedProperties.join(', ')} FROM ${updatedState.selectedAssetModel}`;
 
-    if (queryState.whereConditions.length > 0) {
-      const conditions = queryState.whereConditions
+    if (updatedState.whereConditions.length > 0) {
+      const conditions = updatedState.whereConditions
         .filter((c) => c.column && c.value)
         .map((c, i) => {
           const isVariable = c.value.startsWith('$');
-          const value = isVariable ? c.value : `"${c.value}"`;
+          const value = isVariable ? c.value : `${c.value}`;
           const condition = `${c.column} ${c.operator} "${value}"`;
           return i === 0 ? condition : `${c.logicalOperator} ${condition}`;
         });
       preview += `\nWHERE ${conditions.join(' ')}`;
     }
 
-    if (queryState.groupByTags.length > 0) {
-      preview += `\nGROUP BY ${queryState.groupByTags.map((tag) => `${tag}`).join(', ')}`;
-      if (queryState.groupByTime) {
-        preview += `, time(${queryState.groupByTime})`;
+    if (updatedState.groupByTags.length > 0) {
+      preview += `\nGROUP BY ${updatedState.groupByTags.map((tag) => `${tag}`).join(', ')}`;
+      if (updatedState.groupByTime) {
+        preview += `, time(${updatedState.groupByTime})`;
       }
     }
 
-    preview += `\nORDER BY time ${queryState.orderBy}`;
+    preview += `\nORDER BY time ${updatedState.orderBy}`;
 
-    if (queryState.limit) {
-      preview += `\nLIMIT ${queryState.limit}`;
+    if (updatedState.limit) {
+      preview += `\nLIMIT ${updatedState.limit}`;
     }
 
     return preview;
@@ -225,7 +197,7 @@ export function SqlQueryBuilder({ query, onChange, datasource }: SqlQueryBuilder
 
       {/* Query Preview */}
       <Alert title="Query Preview" severity="info">
-        <pre style={{ background: 'transparent', border: 'none', fontSize: '12px' }}>{generateQueryPreview()}</pre>
+        <pre style={{ background: 'transparent', border: 'none', fontSize: '12px' }}>{queryState.rawSQL}</pre>
       </Alert>
     </div>
   );

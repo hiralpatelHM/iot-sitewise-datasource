@@ -6,15 +6,21 @@ import { SitewiseQuery, SitewiseOptions } from 'types';
 import { SitewiseCompletionProvider } from 'language/autoComplete';
 import { css } from '@emotion/css';
 import { SqlQueryBuilder } from '../sql-query-builder/SqlQueryBuilder';
+import { defaultSitewiseQueryState, SitewiseQueryState } from '../sql-query-builder/types';
 
 type Props = QueryEditorProps<DataSource, SitewiseQuery, SitewiseOptions>;
 
 export function RawQueryEditor(props: Props) {
   const { onChange, query, datasource } = props;
   const [mode, setMode] = useState<'raw' | 'builder'>('builder');
-  // Handler for toggling editor mode
   const toggleMode = () => {
     setMode((prev) => (prev === 'raw' ? 'builder' : 'raw'));
+  };
+  const [builderState, setBuilderState] = useState(defaultSitewiseQueryState);
+
+  const handleQueryChange = (updatedState: SitewiseQueryState) => {
+    setBuilderState(updatedState);
+    query.rawSQL = updatedState.rawSQL;
   };
 
   return (
@@ -54,7 +60,7 @@ export function RawQueryEditor(props: Props) {
         />
       ) : (
         <div>
-          <SqlQueryBuilder query={query} onChange={onChange} datasource={datasource} />
+          <SqlQueryBuilder query={builderState} onChange={handleQueryChange} />
         </div>
       )}
     </div>
