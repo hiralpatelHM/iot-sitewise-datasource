@@ -156,15 +156,18 @@ export const timeIntervalProperty: AssetProperty = {
 
 // queryOptions
 export const whereOperators = [
-  { label: '=', value: '=' },
-  { label: '!=', value: '!=' },
   { label: '>', value: '>' },
   { label: '<', value: '<' },
   { label: '>=', value: '>=' },
   { label: '<=', value: '<=' },
-  { label: 'IS', value: 'IS' },
-  { label: 'IS NOT', value: 'IS_NOT' },
-  { label: 'CONTAINS', value: 'CONTAINS' },
+  { label: '=', value: '=' },
+  { label: '!=', value: '!=' },
+  { label: 'LIKE', value: 'LIKE' },
+  { label: 'IN', value: 'IN' },
+  { label: 'IS NULL', value: 'IS NULL' },
+  { label: 'IS NOT NULL', value: 'IS NOT NULL' },
+  { label: 'IS NAN', value: 'IS NAN' },
+  { label: 'IS NOT NAN', value: 'IS NOT NAN' },
 ];
 
 export const aggregationFunctions = [

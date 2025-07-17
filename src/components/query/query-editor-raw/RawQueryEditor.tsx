@@ -6,14 +6,12 @@ import { SitewiseQuery, SitewiseOptions } from 'types';
 import { SitewiseCompletionProvider } from 'language/autoComplete';
 import { css } from '@emotion/css';
 import { SqlQueryBuilder } from '../sql-query-builder/SqlQueryBuilder';
-// import { SQLBuilder } from './SQLBuilder'; // Import your SQLBuilder component
 
 type Props = QueryEditorProps<DataSource, SitewiseQuery, SitewiseOptions>;
 
 export function RawQueryEditor(props: Props) {
   const { onChange, query, datasource } = props;
   const [mode, setMode] = useState<'raw' | 'builder'>('builder');
-
   // Handler for toggling editor mode
   const toggleMode = () => {
     setMode((prev) => (prev === 'raw' ? 'builder' : 'raw'));
@@ -30,11 +28,6 @@ export function RawQueryEditor(props: Props) {
           margin-bottom: 8px;
         `}
       >
-        {/* <Switch
-    label={mode === 'raw' ? 'Raw SQL Editor' : 'SQL Builder'}
-    checked={mode === 'builder'}
-    onChange={toggleMode}
-  /> */}
         <IconButton
           name="pen"
           tooltip={mode === 'builder' ? 'Switch to Builder' : 'Switch to Raw Editor'}

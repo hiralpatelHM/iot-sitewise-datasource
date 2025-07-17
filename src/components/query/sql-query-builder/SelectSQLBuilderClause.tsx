@@ -1,12 +1,12 @@
 import React from 'react';
-import { Select, Input, IconButton, Tooltip } from '@grafana/ui';
+import { Select, Input, IconButton, Tooltip, InlineLabel } from '@grafana/ui';
 import { EditorField, EditorFieldGroup, EditorRow } from '@grafana/plugin-ui';
 import { allFunctions, SelectField } from './types';
 
 interface SelectSQLBuilderClauseProps {
   selectFields: SelectField[];
   updateQuery: (updatedFields: Partial<{ selectFields: SelectField[] }>) => void;
-  availableProperties: { id: string; name: string }[];
+  availableProperties: Array<{ id: string; name: string }>;
 }
 
 export const SelectSQLBuilderClause: React.FC<SelectSQLBuilderClauseProps> = ({
@@ -37,18 +37,25 @@ export const SelectSQLBuilderClause: React.FC<SelectSQLBuilderClauseProps> = ({
       {selectFields.map((field, index) => (
         <EditorRow key={index}>
           <EditorFieldGroup>
-            <EditorField label={index === 0 ? 'Select' : ''} width={30}>
+            {index === 0 && (
+              <EditorField label="" width={10}>
+                <InlineLabel width="auto" style={{ color: '#rgb(110, 159, 255)', fontWeight: 'bold' }}>
+                  SELECT
+                </InlineLabel>
+              </EditorField>
+            )}
+            <EditorField label="" width={30}>
               <Select
                 options={availableProperties.map((prop) => ({ label: prop.name, value: prop.id }))}
                 value={field.column}
                 onChange={(option) => updateSelectField(index, { column: option?.value || '' })}
-                placeholder="Select property..."
+                placeholder="Select column..."
               />
             </EditorField>
-            <EditorField label={index === 0 ? 'Function' : ''} width={30}>
+            <EditorField label="" width={30}>
               <Select
                 options={allFunctions.map((func) => ({
-                  label: `${func.group}: ${func.label}`,
+                  label: func.label === 'Raw Values' ? func.label : `${func.group}: ${func.label}`,
                   value: func.value,
                 }))}
                 value={field.aggregation}
@@ -56,14 +63,14 @@ export const SelectSQLBuilderClause: React.FC<SelectSQLBuilderClauseProps> = ({
                 placeholder="No function"
               />
             </EditorField>
-            <EditorField label={index === 0 ? 'Alias' : ''} width={25}>
+            <EditorField label="" width={25}>
               <Input
                 value={field.alias}
                 onChange={(e) => updateSelectField(index, { alias: e.currentTarget.value })}
                 placeholder="Optional alias"
               />
             </EditorField>
-            <EditorField label={index === 0 ? 'Actions' : ''} width={15}>
+            <EditorField label="" width={15}>
               <div>
                 <Tooltip content="Add field">
                   <IconButton name="plus" onClick={addSelectField} aria-label="Add field" />
