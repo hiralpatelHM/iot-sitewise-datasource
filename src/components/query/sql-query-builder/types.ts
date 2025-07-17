@@ -1,3 +1,5 @@
+import { SelectableValue } from '@grafana/data';
+
 export interface SqlQueryBuilderProps {
   query: any;
   onChange: (query: any) => void;
@@ -184,7 +186,7 @@ export const aggregationFunctions = [
   { label: 'alias()', value: 'ALIAS', group: 'Transformations' },
 ];
 
-export const timeIntervals = [
+export const timeIntervals: Array<SelectableValue<string>> = [
   { label: '1s', value: '1s' },
   { label: '5s', value: '5s' },
   { label: '10s', value: '10s' },

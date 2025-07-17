@@ -1,12 +1,19 @@
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { EditorField, EditorFieldGroup, EditorRow } from '@grafana/plugin-ui';
-import { InlineLabel, Select } from '@grafana/ui';
+import { InlineLabel, Select, ActionMeta } from '@grafana/ui';
+import { SelectableValue } from '@grafana/data';
 import { timeIntervals } from './types';
 
+interface PropertyOption {
+  id: string;
+  name: string;
+}
+
 interface GroupBySQLBuilderClauseProps {
-  availablePropertiesForGrouping: Array<{ id: string; name: string }>;
+  availablePropertiesForGrouping: PropertyOption[];
   groupByTags: string[];
   groupByTime: string;
+  label: string;
   updateQuery: (fields: Partial<{ groupByTags: string[]; groupByTime: string }>) => void;
 }
 
@@ -14,51 +21,93 @@ export const GroupBySQLBuilderClause: React.FC<GroupBySQLBuilderClauseProps> = (
   availablePropertiesForGrouping,
   groupByTags,
   groupByTime,
+  label,
   updateQuery,
 }) => {
-  const handleGroupByChange = (options: any) => {
-    const values = options?.map((opt: any) => opt.value) || [];
-    updateQuery({ groupByTags: values });
+  // Memoized list of available GROUP BY columns
+  const groupByOptions: Array<SelectableValue<string>> = useMemo(
+    () =>
+      availablePropertiesForGrouping.map(({ id, name }) => ({
+        value: id,
+        label: name,
+      })),
+    [availablePropertiesForGrouping]
+  );
 
-    // Optional: Reset time interval if timeInterval is deselected
-    if (!values.includes('timeInterval')) {
-      updateQuery({ groupByTime: '' });
-    }
-  };
+  // Memoized currently selected GROUP BY columns
+  const selectedGroupByOptions: Array<SelectableValue<string>> = useMemo(
+    () =>
+      groupByTags.map((tag) => {
+        return groupByOptions.find((opt) => opt.value === tag) || { value: tag, label: tag };
+      }),
+    [groupByTags, groupByOptions]
+  );
+
+  const handleGroupByTagsChange = useCallback(
+    (options: SelectableValue<string> | SelectableValue<string>[], _meta?: ActionMeta) => {
+      let tags: string[] = [];
+
+      if (Array.isArray(options)) {
+        tags = options.map((opt) => opt.value).filter(Boolean) as string[];
+      } else if (options?.value) {
+        tags = [options.value];
+      }
+
+      const nextState: Partial<{ groupByTags: string[]; groupByTime: string }> = {
+        groupByTags: tags,
+      };
+
+      if (!tags.includes('timeInterval')) {
+        nextState.groupByTime = '';
+      }
+
+      updateQuery(nextState);
+    },
+    [updateQuery]
+  );
+
+  // Handle changes to GROUP BY timeInterval (single-select)
+  const handleGroupByTimeChange = useCallback(
+    (option: SelectableValue<string> | null, _meta?: ActionMeta) => {
+      updateQuery({ groupByTime: option?.value || '' });
+    },
+    [updateQuery]
+  );
 
   return (
     <EditorRow>
       <EditorFieldGroup>
         <EditorField label="" width={10}>
-          <InlineLabel width="auto" style={{ color: '#rgb(110, 159, 255)', fontWeight: 'bold' }}>
-            GROUP BY
+          <InlineLabel
+            width="auto"
+            tooltip="Select one or more columns to group your query by"
+            style={{ color: '#rgb(110, 159, 255)', fontWeight: 'bold' }}
+          >
+            {label || 'GROUP BY'}
           </InlineLabel>
         </EditorField>
+
         <EditorField label="" width={30}>
           <Select
-            options={availablePropertiesForGrouping.map((prop) => ({
-              label: prop.name,
-              value: prop.id,
-            }))}
-            value={availablePropertiesForGrouping
-              .filter((prop) => groupByTags.includes(prop.id))
-              .map((prop) => ({ label: prop.name, value: prop.id }))}
-            onChange={handleGroupByChange}
-            placeholder="Select column..."
+            options={groupByOptions}
+            value={selectedGroupByOptions}
+            onChange={handleGroupByTagsChange}
             isMulti
+            placeholder="Select column(s)..."
           />
         </EditorField>
 
-        {Array.isArray(groupByTags) && groupByTags.includes('timeInterval') && (
+        {groupByTags.includes('timeInterval') && (
           <EditorField label="" width={20}>
             <Select
               options={[{ label: 'No grouping', value: '' }, ...timeIntervals]}
-              value={timeIntervals.find((ti) => ti.value === groupByTime)}
-              onChange={(option) =>
-                updateQuery({
-                  groupByTime: option?.value || '',
-                })
+              value={
+                timeIntervals.find((ti) => ti.value === groupByTime) || {
+                  label: 'No grouping',
+                  value: '',
+                }
               }
+              onChange={handleGroupByTimeChange}
               placeholder="Select interval..."
             />
           </EditorField>
