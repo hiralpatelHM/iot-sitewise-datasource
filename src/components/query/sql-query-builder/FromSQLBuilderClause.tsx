@@ -1,6 +1,7 @@
 import React from 'react';
-import { InlineLabel, Select } from '@grafana/ui';
+import { Select } from '@grafana/ui';
 import { EditorField, EditorFieldGroup, EditorRow } from '@grafana/plugin-ui';
+import { StyledLabel } from './StyledLabel';
 
 interface FromSQLBuilderProps {
   assetModels: Array<{ id: string; name: string }>;
@@ -18,12 +19,8 @@ export const FromSQLBuilder: React.FC<FromSQLBuilderProps> = ({ assetModels, sel
   return (
     <EditorRow>
       <EditorFieldGroup>
-        <EditorField label="" width={10}>
-          <InlineLabel width="auto" style={{ color: '#rgb(110, 159, 255)', fontWeight: 'bold' }}>
-            FROM
-          </InlineLabel>
-        </EditorField>
-        <EditorField label="" width={40}>
+        <StyledLabel text="FROM" width={15} tooltip />
+        <EditorField label="" width={30}>
           <Select
             options={assetModels.map((model) => ({
               label: model.name,

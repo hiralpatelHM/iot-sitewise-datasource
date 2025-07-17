@@ -1,8 +1,9 @@
 import React, { useMemo, useCallback } from 'react';
 import { EditorField, EditorFieldGroup, EditorRow } from '@grafana/plugin-ui';
-import { InlineLabel, Select, ActionMeta } from '@grafana/ui';
+import { Select, ActionMeta } from '@grafana/ui';
 import { SelectableValue } from '@grafana/data';
 import { timeIntervals } from './types';
+import { StyledLabel } from './StyledLabel';
 
 interface PropertyOption {
   id: string;
@@ -13,7 +14,6 @@ interface GroupBySQLBuilderClauseProps {
   availablePropertiesForGrouping: PropertyOption[];
   groupByTags: string[];
   groupByTime: string;
-  label: string;
   updateQuery: (fields: Partial<{ groupByTags: string[]; groupByTime: string }>) => void;
 }
 
@@ -21,7 +21,6 @@ export const GroupBySQLBuilderClause: React.FC<GroupBySQLBuilderClauseProps> = (
   availablePropertiesForGrouping,
   groupByTags,
   groupByTime,
-  label,
   updateQuery,
 }) => {
   // Memoized list of available GROUP BY columns
@@ -77,17 +76,8 @@ export const GroupBySQLBuilderClause: React.FC<GroupBySQLBuilderClauseProps> = (
   return (
     <EditorRow>
       <EditorFieldGroup>
-        <EditorField label="" width={10}>
-          <InlineLabel
-            width="auto"
-            tooltip="Select one or more columns to group your query by"
-            style={{ color: '#rgb(110, 159, 255)', fontWeight: 'bold' }}
-          >
-            {label || 'GROUP BY'}
-          </InlineLabel>
-        </EditorField>
-
-        <EditorField label="" width={30}>
+        <StyledLabel text={'GROUP BY'} width={15} tooltip />
+        <EditorField label="" width={25}>
           <Select
             options={groupByOptions}
             value={selectedGroupByOptions}
@@ -98,7 +88,7 @@ export const GroupBySQLBuilderClause: React.FC<GroupBySQLBuilderClauseProps> = (
         </EditorField>
 
         {groupByTags.includes('timeInterval') && (
-          <EditorField label="" width={20}>
+          <EditorField label="" width={15}>
             <Select
               options={[{ label: 'No grouping', value: '' }, ...timeIntervals]}
               value={

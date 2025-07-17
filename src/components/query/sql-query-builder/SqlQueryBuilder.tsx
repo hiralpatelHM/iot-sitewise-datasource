@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Select, Input, Alert, InlineLabel } from '@grafana/ui';
-// import { QueryType } from 'types';
+import { Select, Alert, InlineLabel } from '@grafana/ui';
 import { EditorField, EditorFieldGroup, EditorRow, EditorRows } from '@grafana/plugin-ui';
 import {
   SitewiseQueryState,
@@ -8,12 +7,12 @@ import {
   AssetProperty,
   mockAssetModels,
   timeIntervalProperty,
-  timeIntervals,
 } from './types';
 import { FromSQLBuilder } from './FromSQLBuilderClause';
 import { SelectSQLBuilderClause } from './SelectSQLBuilderClause';
 import { WhereSQLBuilderClause } from './WhereSQLBuilderClause';
 import { GroupBySQLBuilderClause } from './GroupBySQLBuilderClause';
+import { LimitSQLBuilderClause } from './LimitSQLBuilderClause';
 
 export function SqlQueryBuilder({ query, onChange, datasource }: SqlQueryBuilderProps) {
   const [queryState, setQueryState] = useState<SitewiseQueryState>({
@@ -82,7 +81,7 @@ export function SqlQueryBuilder({ query, onChange, datasource }: SqlQueryBuilder
         return name;
       });
 
-    let preview = `select ${selectedProperties.join(', ')} from ${queryState.selectedAssetModel}`;
+    let preview = `SELECT ${selectedProperties.join(', ')} FROM ${queryState.selectedAssetModel}`;
 
     if (queryState.whereConditions.length > 0) {
       const conditions = queryState.whereConditions
@@ -140,47 +139,10 @@ export function SqlQueryBuilder({ query, onChange, datasource }: SqlQueryBuilder
           availablePropertiesForGrouping={availablePropertiesForGrouping} // array of { id, name }
           groupByTags={queryState.groupByTags}
           groupByTime={queryState.groupByTime || ''}
-          label="GROUP BY"
           updateQuery={updateQuery}
         />
-        <EditorRow>
-          <EditorFieldGroup>
-            <EditorField label="" width={10}>
-              <InlineLabel width="auto" style={{ color: '#rgb(110, 159, 255)', fontWeight: 'bold' }}>
-                GROUP BY
-              </InlineLabel>
-            </EditorField>
-            <EditorField label="" width={30}>
-              <Select
-                options={availablePropertiesForGrouping.map((prop) => ({
-                  label: prop.name,
-                  value: prop.id,
-                }))}
-                value={queryState.groupByTags}
-                onChange={(options) =>
-                  updateQuery({
-                    groupByTags: options?.map((opt: any) => opt.value) || [],
-                  })
-                }
-                placeholder="Select column..."
-                isMulti
-              />
-            </EditorField>
 
-            {Array.isArray(queryState.groupByTags) && queryState.groupByTags.includes('timeInterval') && (
-              <EditorField label="" width={20}>
-                <Select
-                  options={[{ label: 'No grouping', value: '' }, ...timeIntervals]}
-                  value={queryState.groupByTime}
-                  onChange={(option) => updateQuery({ groupByTime: option?.value || '' })}
-                  placeholder="Select interval..."
-                />
-              </EditorField>
-            )}
-          </EditorFieldGroup>
-        </EditorRow>
-
-        {/* OUTPUT OPTIONS Section */}
+        {/* ORDER BY Section */}
         <EditorRow>
           <EditorFieldGroup>
             <EditorField label="" width={10}>
@@ -198,24 +160,11 @@ export function SqlQueryBuilder({ query, onChange, datasource }: SqlQueryBuilder
                 onChange={(option) => updateQuery({ orderBy: option?.value as 'ASC' | 'DESC' })}
               />
             </EditorField>
-            <EditorField label="" width={8}>
-              <InlineLabel width="auto" style={{ color: '#rgb(110, 159, 255)', fontWeight: 'bold' }}>
-                LIMIT
-              </InlineLabel>
-            </EditorField>
-
-            <EditorField label="" width={25}>
-              <Input
-                type="number"
-                value={queryState.limit}
-                onChange={(e) => updateQuery({ limit: parseInt(e.currentTarget.value, 10) || 1000 })}
-              />
-            </EditorField>
 
             {/* <EditorField
                     label="Timezone"
                     width={30}
-                >
+                    >
                     <Select
                     options={timezones}
                     value={queryState.timezone}
@@ -224,6 +173,9 @@ export function SqlQueryBuilder({ query, onChange, datasource }: SqlQueryBuilder
                 </EditorField> */}
           </EditorFieldGroup>
         </EditorRow>
+
+        {/* LIMIT Section */}
+        <LimitSQLBuilderClause limit={queryState.limit} updateQuery={updateQuery} />
       </EditorRows>
 
       {/* Query Preview */}

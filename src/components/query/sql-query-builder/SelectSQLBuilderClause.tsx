@@ -1,7 +1,8 @@
 import React from 'react';
-import { Select, Input, IconButton, Tooltip, InlineLabel } from '@grafana/ui';
+import { Select, Input, IconButton, Tooltip } from '@grafana/ui';
 import { EditorField, EditorFieldGroup, EditorRow } from '@grafana/plugin-ui';
 import { allFunctions, SelectField } from './types';
+import { StyledLabel } from './StyledLabel';
 
 interface SelectSQLBuilderClauseProps {
   selectFields: SelectField[];
@@ -37,14 +38,8 @@ export const SelectSQLBuilderClause: React.FC<SelectSQLBuilderClauseProps> = ({
       {selectFields.map((field, index) => (
         <EditorRow key={index}>
           <EditorFieldGroup>
-            {index === 0 && (
-              <EditorField label="" width={10}>
-                <InlineLabel width="auto" style={{ color: '#rgb(110, 159, 255)', fontWeight: 'bold' }}>
-                  SELECT
-                </InlineLabel>
-              </EditorField>
-            )}
-            <EditorField label="" width={30}>
+            <StyledLabel text={index === 0 ? 'SELECT' : ''} width={15} tooltip={index === 0} />
+            <EditorField label="" width={25}>
               <Select
                 options={availableProperties.map((prop) => ({ label: prop.name, value: prop.id }))}
                 value={field.column}
@@ -52,7 +47,7 @@ export const SelectSQLBuilderClause: React.FC<SelectSQLBuilderClauseProps> = ({
                 placeholder="Select column..."
               />
             </EditorField>
-            <EditorField label="" width={30}>
+            <EditorField label="" width={25}>
               <Select
                 options={allFunctions.map((func) => ({
                   label: func.label === 'Raw Values' ? func.label : `${func.group}: ${func.label}`,

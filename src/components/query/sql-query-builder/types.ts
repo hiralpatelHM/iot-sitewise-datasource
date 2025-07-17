@@ -244,3 +244,13 @@ export const allFunctions: Array<{
   { group: 'DateTime', label: 'TIMEZONE_MINUTE', value: 'TIMEZONE_MINUTE' },
   { group: 'Null', label: 'COALESCE', value: 'COALESCE' },
 ];
+
+// tooltipMessages.ts
+export const tooltipMessages: Record<string, string> = {
+  FROM: 'Select the source table or measurement to query data from.',
+  SELECT: 'Choose the fields or columns you want to retrieve in the result.',
+  WHERE: 'Filter rows based on specific conditions.',
+  'GROUP BY': 'Select one or more columns to group your query by',
+  'ORDER BY': 'Sort the result set by one or more columns.',
+  LIMIT: 'Restrict the number of records returned by the query.',
+};

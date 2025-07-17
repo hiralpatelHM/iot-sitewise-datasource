@@ -1,8 +1,9 @@
 import React from 'react';
-import { Select, IconButton, Tooltip, InlineLabel } from '@grafana/ui';
+import { Select, IconButton, Tooltip } from '@grafana/ui';
 import { EditorField, EditorFieldGroup, EditorRow } from '@grafana/plugin-ui';
 import { WhereCondition, whereOperators } from './types';
 import { VariableSuggestInput } from './VariableInputWithSuggestions';
+import { StyledLabel } from './StyledLabel';
 
 interface WhereSQLBuilderClauseProps {
   whereConditions: WhereCondition[];
@@ -39,14 +40,8 @@ export const WhereSQLBuilderClause: React.FC<WhereSQLBuilderClauseProps> = ({
       {whereConditions.map((condition, index) => (
         <EditorRow key={index}>
           <EditorFieldGroup>
-            {index === 0 && (
-              <EditorField label="" width={10}>
-                <InlineLabel width="auto" style={{ color: '#rgb(110, 159, 255)', fontWeight: 'bold' }}>
-                  WHERE
-                </InlineLabel>
-              </EditorField>
-            )}
-            <EditorField label="" width={30}>
+            <StyledLabel text={index === 0 ? 'WHERE' : ''} width={15} tooltip={index === 0} />
+            <EditorField label="" width={25}>
               <Select
                 options={availableProperties.map((prop) => ({
                   label: prop.name,
@@ -65,7 +60,7 @@ export const WhereSQLBuilderClause: React.FC<WhereSQLBuilderClauseProps> = ({
                 onChange={(option) => updateWhereCondition(index, { operator: option?.value || '=' })}
               />
             </EditorField>
-            <EditorField label="" width={30}>
+            <EditorField label="" width={25}>
               <VariableSuggestInput
                 value={condition.value}
                 onChange={(val) => updateWhereCondition(index, { value: val })}
