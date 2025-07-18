@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { CodeEditor, IconButton } from '@grafana/ui';
 import { QueryEditorProps } from '@grafana/data';
 import { DataSource } from 'SitewiseDataSource';
@@ -18,10 +18,13 @@ export function RawQueryEditor(props: Props) {
   };
   const [builderState, setBuilderState] = useState(defaultSitewiseQueryState);
 
-  const handleQueryChange = (updatedState: SitewiseQueryState) => {
-    setBuilderState(updatedState);
-    query.rawSQL = updatedState.rawSQL;
-  };
+  const handleQueryChange = useCallback(
+    (updatedState: SitewiseQueryState) => {
+      setBuilderState(updatedState);
+      query.rawSQL = updatedState.rawSQL;
+    },
+    [query]
+  );
 
   return (
     <div>

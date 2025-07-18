@@ -21,7 +21,7 @@ export function SqlQueryBuilder({ query, onChange }: SqlQueryBuilderProps) {
   useEffect(() => {
     queryStateRef.current = queryState;
     onChange(queryState);
-  }, [queryState]);
+  }, [queryState, onChange]);
 
   const selectedModel = mockAssetModels.find((model) => model.id === queryState.selectedAssetModel);
   const availableProperties = selectedModel?.properties || [];
