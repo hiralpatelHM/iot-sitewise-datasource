@@ -19,6 +19,11 @@ export interface WhereCondition {
   logicalOperator: 'AND' | 'OR';
 }
 
+export interface OrderByField {
+  column: string;
+  direction: 'ASC' | 'DESC';
+}
+
 export interface SitewiseQueryState {
   selectedAssetModel?: string;
   selectedAssets: string[];
@@ -26,7 +31,7 @@ export interface SitewiseQueryState {
   whereConditions: WhereCondition[];
   groupByTime?: string;
   groupByTags: string[];
-  orderBy: 'ASC' | 'DESC';
+  orderByFields: OrderByField[];
   limit?: number;
   timezone: string;
   rawQueryMode: boolean;

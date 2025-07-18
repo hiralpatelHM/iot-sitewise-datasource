@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Select, Alert, InlineLabel } from '@grafana/ui';
-import { EditorField, EditorFieldGroup, EditorRow, EditorRows } from '@grafana/plugin-ui';
+import { Alert } from '@grafana/ui';
+import { EditorRows } from '@grafana/plugin-ui';
 import {
   SitewiseQueryState,
   SqlQueryBuilderProps,
@@ -13,6 +13,7 @@ import { SelectSQLBuilderClause } from './SelectSQLBuilderClause';
 import { WhereSQLBuilderClause } from './WhereSQLBuilderClause';
 import { GroupBySQLBuilderClause } from './GroupBySQLBuilderClause';
 import { LimitSQLBuilderClause } from './LimitSQLBuilderClause';
+import { OrderBySQLBuilderClause } from './OrderBySQLBuilderClause';
 
 export function SqlQueryBuilder({ query, onChange, datasource }: SqlQueryBuilderProps) {
   const [queryState, setQueryState] = useState<SitewiseQueryState>({
@@ -22,7 +23,7 @@ export function SqlQueryBuilder({ query, onChange, datasource }: SqlQueryBuilder
     whereConditions: query.whereConditions || [{ column: '', operator: '', value: '', logicalOperator: 'AND' }],
     groupByTime: query.groupByTime || '',
     groupByTags: query.groupByTags || [],
-    orderBy: query.orderBy === 'ASC' || query.orderBy === 'DESC' ? query.orderBy : 'ASC',
+    orderByFields: [{ column: '', direction: 'ASC' }],
     limit: query.limit || 1000,
     timezone: query.timezone || 'UTC',
     rawQueryMode: false,
@@ -38,7 +39,7 @@ export function SqlQueryBuilder({ query, onChange, datasource }: SqlQueryBuilder
         whereConditions: queryState.whereConditions,
         groupByTime: queryState.groupByTime,
         groupByTags: queryState.groupByTags,
-        orderBy: queryState.orderBy,
+        orderByFields: queryState.orderByFields,
         limit: queryState.limit,
         timezone: queryState.timezone,
         rawSQL: query.rawSQL,
@@ -102,7 +103,16 @@ export function SqlQueryBuilder({ query, onChange, datasource }: SqlQueryBuilder
       }
     }
 
-    preview += `\nORDER BY time ${queryState.orderBy}`;
+    if (queryState.orderByFields && queryState.orderByFields.length > 0) {
+      const orderByParts = queryState.orderByFields
+        .filter((f) => f.column)
+        .map((f) => `${f.column} ${f.direction}`)
+        .join(', ');
+
+      if (orderByParts) {
+        preview += `\nORDER BY ${orderByParts}`;
+      }
+    }
 
     if (queryState.limit) {
       preview += `\nLIMIT ${queryState.limit}`;
@@ -113,8 +123,8 @@ export function SqlQueryBuilder({ query, onChange, datasource }: SqlQueryBuilder
 
   return (
     <div className="gf-form-group">
-      {/* FROM Section */}
       <EditorRows>
+        {/* FROM Section */}
         <FromSQLBuilder
           assetModels={mockAssetModels}
           selectedModelId={queryState.selectedAssetModel || ''}
@@ -127,6 +137,7 @@ export function SqlQueryBuilder({ query, onChange, datasource }: SqlQueryBuilder
           updateQuery={updateQuery}
           availableProperties={availableProperties}
         />
+
         {/* WHERE Section */}
         <WhereSQLBuilderClause
           whereConditions={queryState.whereConditions}
@@ -143,39 +154,25 @@ export function SqlQueryBuilder({ query, onChange, datasource }: SqlQueryBuilder
         />
 
         {/* ORDER BY Section */}
-        <EditorRow>
-          <EditorFieldGroup>
-            <EditorField label="" width={10}>
-              <InlineLabel width="auto" style={{ color: '#rgb(110, 159, 255)', fontWeight: 'bold' }}>
-                ORDER BY
-              </InlineLabel>
-            </EditorField>
-            <EditorField label="" width={25}>
-              <Select
-                options={[
-                  { label: 'Ascending', value: 'ASC' },
-                  { label: 'Descending', value: 'DESC' },
-                ]}
-                value={queryState.orderBy}
-                onChange={(option) => updateQuery({ orderBy: option?.value as 'ASC' | 'DESC' })}
-              />
-            </EditorField>
-
-            {/* <EditorField
-                    label="Timezone"
-                    width={30}
-                    >
-                    <Select
-                    options={timezones}
-                    value={queryState.timezone}
-                    onChange={(option) => updateQuery({ timezone: option?.value || 'UTC' })}
-                    />
-                </EditorField> */}
-          </EditorFieldGroup>
-        </EditorRow>
+        <OrderBySQLBuilderClause
+          orderByFields={queryState.orderByFields}
+          updateQuery={(update) => setQueryState((prev) => ({ ...prev, ...update }))}
+          availableProperties={availableProperties}
+        />
 
         {/* LIMIT Section */}
         <LimitSQLBuilderClause limit={queryState.limit} updateQuery={updateQuery} />
+
+        {/* <EditorField
+            label="Timezone"
+            width={30}
+            >
+            <Select
+            options={timezones}
+            value={queryState.timezone}
+            onChange={(option) => updateQuery({ timezone: option?.value || 'UTC' })}
+          />
+          </EditorField> */}
       </EditorRows>
 
       {/* Query Preview */}

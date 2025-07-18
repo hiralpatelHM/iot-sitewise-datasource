@@ -41,7 +41,7 @@ export const WhereSQLBuilderClause: React.FC<WhereSQLBuilderClauseProps> = ({
         <EditorRow key={index}>
           <EditorFieldGroup>
             <StyledLabel text={index === 0 ? 'WHERE' : ''} width={15} tooltip={index === 0} />
-            <EditorField label="" width={25}>
+            <EditorField label="" width={30}>
               <Select
                 options={availableProperties.map((prop) => ({
                   label: prop.name,
@@ -60,7 +60,7 @@ export const WhereSQLBuilderClause: React.FC<WhereSQLBuilderClauseProps> = ({
                 onChange={(option) => updateWhereCondition(index, { operator: option?.value || '=' })}
               />
             </EditorField>
-            <EditorField label="" width={25}>
+            <EditorField label="" width={30}>
               <VariableSuggestInput
                 value={condition.value}
                 onChange={(val) => updateWhereCondition(index, { value: val })}

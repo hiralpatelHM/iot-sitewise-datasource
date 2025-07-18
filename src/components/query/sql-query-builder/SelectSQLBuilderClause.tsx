@@ -39,7 +39,7 @@ export const SelectSQLBuilderClause: React.FC<SelectSQLBuilderClauseProps> = ({
         <EditorRow key={index}>
           <EditorFieldGroup>
             <StyledLabel text={index === 0 ? 'SELECT' : ''} width={15} tooltip={index === 0} />
-            <EditorField label="" width={25}>
+            <EditorField label="" width={30}>
               <Select
                 options={availableProperties.map((prop) => ({ label: prop.name, value: prop.id }))}
                 value={field.column}
@@ -47,7 +47,7 @@ export const SelectSQLBuilderClause: React.FC<SelectSQLBuilderClauseProps> = ({
                 placeholder="Select column..."
               />
             </EditorField>
-            <EditorField label="" width={25}>
+            <EditorField label="" width={30}>
               <Select
                 options={allFunctions.map((func) => ({
                   label: func.label === 'Raw Values' ? func.label : `${func.group}: ${func.label}`,
@@ -58,7 +58,7 @@ export const SelectSQLBuilderClause: React.FC<SelectSQLBuilderClauseProps> = ({
                 placeholder="No function"
               />
             </EditorField>
-            <EditorField label="" width={25}>
+            <EditorField label="" width={30}>
               <Input
                 value={field.alias}
                 onChange={(e) => updateSelectField(index, { alias: e.currentTarget.value })}

@@ -77,7 +77,7 @@ export const GroupBySQLBuilderClause: React.FC<GroupBySQLBuilderClauseProps> = (
     <EditorRow>
       <EditorFieldGroup>
         <StyledLabel text={'GROUP BY'} width={15} tooltip />
-        <EditorField label="" width={25}>
+        <EditorField label="" width={30}>
           <Select
             options={groupByOptions}
             value={selectedGroupByOptions}
