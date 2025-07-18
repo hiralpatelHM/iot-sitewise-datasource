@@ -3,7 +3,6 @@ import { SelectableValue } from '@grafana/data';
 export interface SqlQueryBuilderProps {
   query: any;
   onChange: (query: any) => void;
-  datasource: any;
 }
 
 export interface SelectField {
@@ -34,8 +33,21 @@ export interface SitewiseQueryState {
   orderByFields: OrderByField[];
   limit?: number;
   timezone: string;
-  rawQueryMode: boolean;
+  rawSQL: string;
 }
+
+export const defaultSitewiseQueryState: SitewiseQueryState = {
+  selectedAssetModel: '',
+  selectedAssets: [],
+  selectFields: [{ column: '', aggregation: '', alias: '' }],
+  whereConditions: [{ column: '', operator: '', value: '', logicalOperator: 'AND' }],
+  groupByTime: '',
+  groupByTags: [],
+  orderByFields: [{ column: '', direction: 'ASC' }],
+  limit: 1000,
+  timezone: 'UTC',
+  rawSQL: '',
+};
 
 // AssetModels and Assets
 export interface AssetProperty {
@@ -226,6 +238,10 @@ export const allFunctions: Array<{
   { group: 'Aggregate', label: 'Raw Values', value: '' },
   { group: 'Aggregate', label: 'AVG', value: 'AVG' },
   { group: 'Aggregate', label: 'SUM', value: 'SUM' },
+  { group: 'Aggregate', label: 'COUNT', value: 'COUNT' },
+  { group: 'Aggregate', label: 'MAX', value: 'MAX' },
+  { group: 'Aggregate', label: 'MIN', value: 'MIN' },
+  { group: 'Aggregate', label: 'STDDEV', value: 'STDDEV' },
   { group: 'String', label: 'LENGTH', value: 'LENGTH' },
   { group: 'String', label: 'CONCAT', value: 'CONCAT' },
   { group: 'String', label: 'SUBSTR', value: 'SUBSTR' },
@@ -247,6 +263,9 @@ export const allFunctions: Array<{
   { group: 'DateTime', label: 'SECOND', value: 'SECOND' },
   { group: 'DateTime', label: 'TIMEZONE_HOUR', value: 'TIMEZONE_HOUR' },
   { group: 'DateTime', label: 'TIMEZONE_MINUTE', value: 'TIMEZONE_MINUTE' },
+  { group: 'DateTime', label: 'TO_DATE', value: 'TO_DATE' },
+  { group: 'DateTime', label: 'TO_TIMESTAMP', value: 'TO_TIMESTAMP' },
+  { group: 'DateTime', label: 'TO_TIME', value: 'TO_TIME' },
   { group: 'Null', label: 'COALESCE', value: 'COALESCE' },
 ];
 
