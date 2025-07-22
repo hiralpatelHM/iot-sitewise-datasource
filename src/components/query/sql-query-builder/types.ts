@@ -18,7 +18,7 @@ export interface WhereCondition {
   operator: string;
   value: string;
   value2?: string;
-  logicalOperator: 'AND' | 'OR';
+  logicalOperator?: 'AND' | 'OR';
   operator2?: string; // For BETWEEN operator
 }
 
