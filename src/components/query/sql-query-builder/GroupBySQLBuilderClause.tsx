@@ -43,7 +43,7 @@ export const GroupBySQLBuilderClause: React.FC<GroupBySQLBuilderClauseProps> = (
   );
 
   const handleGroupByTagsChange = useCallback(
-    (options: SelectableValue<string> | SelectableValue<string>[], _meta?: ActionMeta) => {
+    (options: SelectableValue<string> | Array<SelectableValue<string>>, _meta?: ActionMeta) => {
       let tags: string[] = [];
 
       if (Array.isArray(options)) {
