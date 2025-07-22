@@ -4,9 +4,9 @@ import { SqlQueryBuilderProps, mockAssetModels } from './types';
 import { FromClauseEditor } from './clause/FromClauseEditor';
 import { SelectClauseEditor } from './clause/SelectClauseEditor';
 import { WhereClauseEditor } from './clause/WhereClauseEditor';
-import { GroupBySQLBuilderClause } from './GroupBySQLBuilderClause';
-import { LimitSQLBuilderClause } from './LimitSQLBuilderClause';
-import { OrderBySQLBuilderClause } from './OrderBySQLBuilderClause';
+import { GroupByClauseEditor } from './clause/GroupByClauseEditor';
+import { LimitClauseEditor } from './clause/LimitClauseEditor';
+import { OrderByClauseEditor } from './clause/OrderByClauseEditor';
 import { QueryPreviewDisplay } from './QueryPreviewDisplay';
 import { useSQLQueryState } from './hooks/useSQLQueryState';
 
@@ -42,7 +42,7 @@ export function SqlQueryBuilder({ query, onChange }: SqlQueryBuilderProps) {
         />
 
         {/* GROUP BY Section */}
-        <GroupBySQLBuilderClause
+        <GroupByClauseEditor
           availablePropertiesForGrouping={availablePropertiesForGrouping}
           groupByTags={queryState.groupByTags}
           groupByTime={queryState.groupByTime || ''}
@@ -50,14 +50,14 @@ export function SqlQueryBuilder({ query, onChange }: SqlQueryBuilderProps) {
         />
 
         {/* ORDER BY Section */}
-        <OrderBySQLBuilderClause
+        <OrderByClauseEditor
           orderByFields={queryState.orderByFields}
           updateQuery={updateQuery}
           availableProperties={availableProperties}
         />
 
         {/* LIMIT Section */}
-        <LimitSQLBuilderClause limit={queryState.limit} updateQuery={updateQuery} />
+        <LimitClauseEditor limit={queryState.limit} updateQuery={updateQuery} />
 
         {/* Timezone (if needed, uncomment and connect to queryState.timezone) */}
         {/* <EditorField

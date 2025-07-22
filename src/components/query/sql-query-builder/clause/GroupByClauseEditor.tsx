@@ -2,22 +2,22 @@ import React, { useMemo, useCallback } from 'react';
 import { EditorField, EditorFieldGroup, EditorRow } from '@grafana/plugin-ui';
 import { Select, ActionMeta } from '@grafana/ui';
 import { SelectableValue } from '@grafana/data';
-import { timeIntervals } from './types';
-import { StyledLabel } from './StyledLabel';
+import { timeIntervals } from '../types';
+import { StyledLabel } from '../StyledLabel';
 
 interface PropertyOption {
   id: string;
   name: string;
 }
 
-interface GroupBySQLBuilderClauseProps {
+interface GroupByClauseEditorProps {
   availablePropertiesForGrouping: PropertyOption[];
   groupByTags: string[];
   groupByTime: string;
   updateQuery: (fields: Partial<{ groupByTags: string[]; groupByTime: string }>) => void;
 }
 
-export const GroupBySQLBuilderClause: React.FC<GroupBySQLBuilderClauseProps> = ({
+export const GroupByClauseEditor: React.FC<GroupByClauseEditorProps> = ({
   availablePropertiesForGrouping,
   groupByTags,
   groupByTime,

@@ -1,20 +1,20 @@
 import React from 'react';
 import { Select, IconButton, Tooltip } from '@grafana/ui';
 import { EditorField, EditorFieldGroup, EditorRow } from '@grafana/plugin-ui';
-import { StyledLabel } from './StyledLabel';
+import { StyledLabel } from '../StyledLabel';
 
 interface OrderByField {
   column: string;
   direction: 'ASC' | 'DESC';
 }
 
-interface OrderBySQLBuilderClauseProps {
+interface OrderByClauseEditorProps {
   orderByFields: OrderByField[];
   updateQuery: (update: Partial<{ orderByFields: OrderByField[] }>) => void;
   availableProperties: Array<{ id: string; name: string }>;
 }
 
-export const OrderBySQLBuilderClause: React.FC<OrderBySQLBuilderClauseProps> = ({
+export const OrderByClauseEditor: React.FC<OrderByClauseEditorProps> = ({
   orderByFields,
   updateQuery,
   availableProperties,

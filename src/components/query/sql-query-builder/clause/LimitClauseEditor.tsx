@@ -1,15 +1,15 @@
-// LimitSQLBuilderClause.tsx
+// LimitClauseEditor.tsx
 import React from 'react';
 import { Input } from '@grafana/ui';
 import { EditorField, EditorFieldGroup, EditorRow } from '@grafana/plugin-ui';
-import { StyledLabel } from './StyledLabel';
+import { StyledLabel } from '../StyledLabel';
 
-interface LimitSQLBuilderClauseProps {
+interface LimitClauseEditorProps {
   limit?: number;
   updateQuery: (newState: { limit: number }) => void;
 }
 
-export const LimitSQLBuilderClause: React.FC<LimitSQLBuilderClauseProps> = ({ limit, updateQuery }) => {
+export const LimitClauseEditor: React.FC<LimitClauseEditorProps> = ({ limit, updateQuery }) => {
   return (
     <EditorRow>
       <EditorFieldGroup>
