@@ -1,5 +1,5 @@
 // hooks/useSQLQueryState.ts
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { SitewiseQueryState, AssetProperty, mockAssetModels, timeIntervalProperty } from '../types';
 import { validateQuery } from '../utils/validateQuery';
 import { generateQueryPreview } from '../utils/queryGenerator';
@@ -32,15 +32,23 @@ export const useSQLQueryState = ({ initialQuery, onChange }: UseSQLQueryStateOpt
   }, [queryState, onChange]);
 
   useEffect(() => {
-    const validateAndSetPreview = async () => {
-      const errors = validateQuery(queryState);
-      const generatedSql = await generateQueryPreview(queryState);
+    let isMounted = true;
 
-      setPreview(generatedSql);
-      setValidationErrors(errors);
+    const validateAndGenerate = async () => {
+      const errors = validateQuery(queryState);
+      const preview = await generateQueryPreview(queryState);
+
+      if (isMounted) {
+        setValidationErrors(errors);
+        setPreview(preview);
+      }
     };
 
-    validateAndSetPreview();
+    validateAndGenerate();
+
+    return () => {
+      isMounted = false;
+    };
   }, [queryState]);
 
   const updateQuery = async (newState: Partial<SitewiseQueryState>) => {
