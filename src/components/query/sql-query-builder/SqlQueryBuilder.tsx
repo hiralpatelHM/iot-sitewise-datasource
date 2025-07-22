@@ -1,9 +1,9 @@
 import React from 'react'; // No need for useEffect, useRef, useState directly in component
 import { EditorRows } from '@grafana/plugin-ui';
-import { mockAssetModels, SqlQueryBuilderProps } from './types'; // Import only necessary types for the component's props
-import { FromSQLBuilder } from './FromSQLBuilderClause';
-import { SelectSQLBuilderClause } from './SelectSQLBuilderClause';
-import { WhereSQLBuilderClause } from './WhereSQLBuilderClause';
+import { SqlQueryBuilderProps, mockAssetModels } from './types';
+import { FromClauseEditor } from './clause/FromClauseEditor';
+import { SelectClauseEditor } from './clause/SelectClauseEditor';
+import { WhereClauseEditor } from './clause/WhereClauseEditor';
 import { GroupBySQLBuilderClause } from './GroupBySQLBuilderClause';
 import { LimitSQLBuilderClause } from './LimitSQLBuilderClause';
 import { OrderBySQLBuilderClause } from './OrderBySQLBuilderClause';
@@ -11,38 +11,31 @@ import { QueryPreviewDisplay } from './QueryPreviewDisplay';
 import { useSQLQueryState } from './hooks/useSQLQueryState';
 
 export function SqlQueryBuilder({ query, onChange }: SqlQueryBuilderProps) {
-  const {
-    queryState,
-    preview,
-    validationErrors,
-    updateQuery,
-    selectedModel,
-    availableProperties,
-    availablePropertiesForGrouping,
-  } = useSQLQueryState({
-    initialQuery: query,
-    onChange: onChange,
-  });
+  const { queryState, preview, validationErrors, updateQuery, availableProperties, availablePropertiesForGrouping } =
+    useSQLQueryState({
+      initialQuery: query,
+      onChange: onChange,
+    });
 
   return (
     <div className="gf-form-group">
       <EditorRows>
         {/* FROM Section */}
-        <FromSQLBuilder
+        <FromClauseEditor
           assetModels={mockAssetModels}
           selectedModelId={queryState.selectedAssetModel || ''}
           updateQuery={updateQuery}
         />
 
         {/* SELECT Section */}
-        <SelectSQLBuilderClause
+        <SelectClauseEditor
           selectFields={queryState.selectFields}
           updateQuery={updateQuery}
           availableProperties={availableProperties}
         />
 
         {/* WHERE Section */}
-        <WhereSQLBuilderClause
+        <WhereClauseEditor
           whereConditions={queryState.whereConditions}
           updateQuery={updateQuery}
           availableProperties={availableProperties}

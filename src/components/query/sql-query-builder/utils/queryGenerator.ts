@@ -1,4 +1,4 @@
-import { SitewiseQueryState, mockAssetModels } from '../types';
+import { SitewiseQueryState, isCastFunction, isDateFunction, mockAssetModels } from '../types';
 
 export const generateQueryPreview = async (queryState: SitewiseQueryState): Promise<string> => {
   const selectedModelForPreview = mockAssetModels.find((model) => model.id === queryState.selectedAssetModel);
@@ -13,7 +13,11 @@ export const generateQueryPreview = async (queryState: SitewiseQueryState): Prom
     .map((field) => {
       const property = availablePropertiesForPreview.find((p) => p.id === field.column);
       let name = property?.name || field.column;
-      if (field.aggregation) {
+      if (isDateFunction(field.aggregation) && field.functionArg && field.functionArgValue) {
+        name = `${field.aggregation}(${field.functionArg}, ${field.functionArgValue}, ${name}  )`;
+      } else if (isCastFunction(field.aggregation) && field.functionArg) {
+        name = `CAST(${name} AS ${field.functionArg})`;
+      } else if (field.aggregation) {
         name = `${field.aggregation}(${name})`;
       }
       if (field.alias) {
@@ -30,10 +34,12 @@ export const generateQueryPreview = async (queryState: SitewiseQueryState): Prom
     const conditions = queryState.whereConditions
       .filter((c) => c.column && c.operator && c.value !== undefined && c.value !== null)
       .map((c, i) => {
-        const isVariable = typeof c.value === 'string' && c.value.startsWith('$');
-        const value = isVariable ? c.value : `'${c.value}'`;
-        const condition = `${c.column} ${c.operator} ${value}`;
-        return i === 0 ? condition : `${c.logicalOperator || 'AND'} ${condition}`;
+        const [value, value2] = [c.value, c.value2].map((v) => (v?.startsWith?.('$') ? v : `"${v}"`));
+        const condition =
+          c.operator === 'BETWEEN' && c.value2
+            ? `${c.column}  ${c.operator}  ${value} ${c.operator2} ${value2}`
+            : `${c.column} ${c.operator} ${value}`;
+        return i === 0 ? condition : `${c.logicalOperator} ${condition}`;
       });
     if (conditions.length > 0) {
       sqlPreview += `\nWHERE ${conditions.join(' ')}`;
