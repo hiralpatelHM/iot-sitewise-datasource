@@ -1,9 +1,9 @@
 import React from 'react';
 import { Select } from '@grafana/ui';
 import { EditorField, EditorFieldGroup, EditorRow } from '@grafana/plugin-ui';
-import { StyledLabel } from './StyledLabel';
+import { StyledLabel } from '../StyledLabel';
 
-interface FromSQLBuilderProps {
+interface FromClauseEditorProps {
   assetModels: Array<{ id: string; name: string }>;
   selectedModelId: string;
   updateQuery: (
@@ -15,7 +15,7 @@ interface FromSQLBuilderProps {
   ) => void;
 }
 
-export const FromSQLBuilder: React.FC<FromSQLBuilderProps> = ({ assetModels, selectedModelId, updateQuery }) => {
+export const FromClauseEditor: React.FC<FromClauseEditorProps> = ({ assetModels, selectedModelId, updateQuery }) => {
   return (
     <EditorRow>
       <EditorFieldGroup>

@@ -7,10 +7,12 @@ import {
   AssetProperty,
   mockAssetModels,
   timeIntervalProperty,
+  isDateFunction,
+  isCastFunction,
 } from './types';
-import { FromSQLBuilder } from './FromSQLBuilderClause';
-import { SelectSQLBuilderClause } from './SelectSQLBuilderClause';
-import { WhereSQLBuilderClause } from './WhereSQLBuilderClause';
+import { FromClauseEditor } from './clause/FromClauseEditor';
+import { SelectClauseEditor } from './clause/SelectClauseEditor';
+import { WhereClauseEditor } from './clause/WhereClauseEditor';
 import { GroupBySQLBuilderClause } from './GroupBySQLBuilderClause';
 import { LimitSQLBuilderClause } from './LimitSQLBuilderClause';
 import { OrderBySQLBuilderClause } from './OrderBySQLBuilderClause';
@@ -34,7 +36,6 @@ export function SqlQueryBuilder({ query, onChange }: SqlQueryBuilderProps) {
   };
 
   const generateQueryPreview = async (updatedState: SitewiseQueryState): Promise<string> => {
-    console.log('😃 ~ generateQueryPreview ~ updatedState:', updatedState);
     if (!updatedState.selectedAssetModel) {
       return 'Select an asset model to build your query';
     }
@@ -44,7 +45,11 @@ export function SqlQueryBuilder({ query, onChange }: SqlQueryBuilderProps) {
       .map((field) => {
         const property = availableProperties.find((p) => p.id === field.column);
         let name = property?.name || field.column;
-        if (field.aggregation) {
+        if (isDateFunction(field.aggregation) && field.functionArg && field.functionArgValue) {
+          name = `${field.aggregation}(${field.functionArg}, ${field.functionArgValue}, ${name}  )`;
+        } else if (isCastFunction(field.aggregation) && field.functionArg) {
+          name = `CAST(${name} AS ${field.functionArg})`;
+        } else if (field.aggregation) {
           name = `${field.aggregation}(${name})`;
         }
         if (field.alias) {
@@ -59,9 +64,11 @@ export function SqlQueryBuilder({ query, onChange }: SqlQueryBuilderProps) {
       const conditions = updatedState.whereConditions
         .filter((c) => c.column && c.value)
         .map((c, i) => {
-          const isVariable = c.value.startsWith('$');
-          const value = isVariable ? c.value : `${c.value}`;
-          const condition = `${c.column} ${c.operator} "${value}"`;
+          const [value, value2] = [c.value, c.value2].map((v) => (v?.startsWith?.('$') ? v : `"${v}"`));
+          const condition =
+            c.operator === 'BETWEEN' && c.value2
+              ? `${c.column}  ${c.operator}  ${value} ${c.operator2} ${value2}`
+              : `${c.column} ${c.operator} ${value}`;
           return i === 0 ? condition : `${c.logicalOperator} ${condition}`;
         });
       preview += `\nWHERE ${conditions.join(' ')}`;
@@ -96,21 +103,21 @@ export function SqlQueryBuilder({ query, onChange }: SqlQueryBuilderProps) {
     <div className="gf-form-group">
       <EditorRows>
         {/* FROM Section */}
-        <FromSQLBuilder
+        <FromClauseEditor
           assetModels={mockAssetModels}
           selectedModelId={queryState.selectedAssetModel || ''}
           updateQuery={updateQuery}
         />
 
         {/* SELECT Section */}
-        <SelectSQLBuilderClause
+        <SelectClauseEditor
           selectFields={queryState.selectFields}
           updateQuery={updateQuery}
           availableProperties={availableProperties}
         />
 
         {/* WHERE Section */}
-        <WhereSQLBuilderClause
+        <WhereClauseEditor
           whereConditions={queryState.whereConditions}
           updateQuery={updateQuery}
           availableProperties={availableProperties}

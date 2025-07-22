@@ -9,13 +9,17 @@ export interface SelectField {
   column: string;
   aggregation?: string;
   alias?: string;
+  functionArg?: string;
+  functionArgValue?: string;
 }
 
 export interface WhereCondition {
   column: string;
   operator: string;
   value: string;
+  value2?: string;
   logicalOperator: 'AND' | 'OR';
+  operator2?: string; // For BETWEEN operator
 }
 
 export interface OrderByField {
@@ -183,6 +187,7 @@ export const whereOperators = [
   { label: '!=', value: '!=' },
   { label: 'LIKE', value: 'LIKE' },
   { label: 'IN', value: 'IN' },
+  { label: 'BETWEEN', value: 'BETWEEN' },
   { label: 'IS NULL', value: 'IS NULL' },
   { label: 'IS NOT NULL', value: 'IS NOT NULL' },
   { label: 'IS NAN', value: 'IS NAN' },
@@ -255,19 +260,26 @@ export const allFunctions: Array<{
   { group: 'Math', label: 'ROUND', value: 'ROUND' },
   { group: 'Math', label: 'FLOOR', value: 'FLOOR' },
   { group: 'DateTime', label: 'NOW', value: 'NOW' },
-  { group: 'DateTime', label: 'YEAR', value: 'YEAR' },
-  { group: 'DateTime', label: 'MONTH', value: 'MONTH' },
-  { group: 'DateTime', label: 'DAY', value: 'DAY' },
-  { group: 'DateTime', label: 'HOUR', value: 'HOUR' },
-  { group: 'DateTime', label: 'MINUTE', value: 'MINUTE' },
-  { group: 'DateTime', label: 'SECOND', value: 'SECOND' },
-  { group: 'DateTime', label: 'TIMEZONE_HOUR', value: 'TIMEZONE_HOUR' },
-  { group: 'DateTime', label: 'TIMEZONE_MINUTE', value: 'TIMEZONE_MINUTE' },
+  { group: 'DateTime', label: 'DATE_ADD', value: 'DATE_ADD' },
+  { group: 'DateTime', label: 'DATE_SUB', value: 'DATE_SUB' },
+  { group: 'DateTime', label: 'TIMESTAMP_ADD', value: 'TIMESTAMP_ADD' },
+  { group: 'DateTime', label: 'TIMESTAMP_SUB', value: 'TIMESTAMP_SUB' },
+  { group: 'DateTime', label: 'CAST', value: 'CAST' },
   { group: 'DateTime', label: 'TO_DATE', value: 'TO_DATE' },
   { group: 'DateTime', label: 'TO_TIMESTAMP', value: 'TO_TIMESTAMP' },
   { group: 'DateTime', label: 'TO_TIME', value: 'TO_TIME' },
   { group: 'Null', label: 'COALESCE', value: 'COALESCE' },
 ];
+
+export const DATE_FUNCTIONS = ['DATE_ADD', 'DATE_SUB', 'TIMESTAMP_ADD', 'TIMESTAMP_SUB'];
+
+export function isDateFunction(funcName?: string): boolean {
+  return funcName ? DATE_FUNCTIONS.includes(funcName) : false;
+}
+
+export function isCastFunction(funcName?: string): boolean {
+  return funcName === 'CAST';
+}
 
 // tooltipMessages.ts
 export const tooltipMessages: Record<string, string> = {
