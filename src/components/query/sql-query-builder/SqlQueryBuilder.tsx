@@ -1,12 +1,12 @@
 import React from 'react'; // No need for useEffect, useRef, useState directly in component
 import { EditorRows } from '@grafana/plugin-ui';
 import { SqlQueryBuilderProps, mockAssetModels } from './types';
-import { FromClauseEditor } from './clause/FromClauseEditor';
-import { SelectClauseEditor } from './clause/SelectClauseEditor';
-import { WhereClauseEditor } from './clause/WhereClauseEditor';
-import { GroupByClauseEditor } from './clause/GroupByClauseEditor';
-import { LimitClauseEditor } from './clause/LimitClauseEditor';
-import { OrderByClauseEditor } from './clause/OrderByClauseEditor';
+import { FromClauseEditor } from './clauses/FromClauseEditor';
+import { SelectClauseEditor } from './clauses/SelectClauseEditor';
+import { WhereClauseEditor } from './clauses/WhereClauseEditor';
+import { GroupByClauseEditor } from './clauses/GroupByClauseEditor';
+import { LimitClauseEditor } from './clauses/LimitClauseEditor';
+import { OrderByClauseEditor } from './clauses/OrderByClauseEditor';
 import { QueryPreviewDisplay } from './QueryPreviewDisplay';
 import { useSQLQueryState } from './hooks/useSQLQueryState';
 
