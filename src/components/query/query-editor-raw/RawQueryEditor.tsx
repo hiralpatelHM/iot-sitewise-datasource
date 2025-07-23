@@ -21,9 +21,12 @@ export function RawQueryEditor(props: Props) {
   const handleQueryChange = useCallback(
     (updatedState: SitewiseQueryState) => {
       setBuilderState(updatedState);
-      query.rawSQL = updatedState.rawSQL;
+      onChange({
+        ...query,
+        rawSQL: updatedState.rawSQL,
+      });
     },
-    [query]
+    [query, onChange]
   );
 
   return (
@@ -63,7 +66,7 @@ export function RawQueryEditor(props: Props) {
         />
       ) : (
         <div>
-          <SqlQueryBuilder query={builderState} onChange={handleQueryChange} />
+          <SqlQueryBuilder builderState={builderState} onChange={handleQueryChange} />
         </div>
       )}
     </div>

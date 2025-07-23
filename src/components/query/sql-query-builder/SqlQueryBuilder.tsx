@@ -10,10 +10,10 @@ import { OrderByClauseEditor } from './clauses/OrderByClauseEditor';
 import { QueryPreviewDisplay } from './QueryPreviewDisplay';
 import { useSQLQueryState } from './hooks/useSQLQueryState';
 
-export function SqlQueryBuilder({ query, onChange }: SqlQueryBuilderProps) {
+export function SqlQueryBuilder({ builderState, onChange }: SqlQueryBuilderProps) {
   const { queryState, preview, validationErrors, updateQuery, availableProperties, availablePropertiesForGrouping } =
     useSQLQueryState({
-      initialQuery: query,
+      initialQuery: builderState,
       onChange: onChange,
     });
 

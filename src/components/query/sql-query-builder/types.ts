@@ -1,7 +1,7 @@
 import { SelectableValue } from '@grafana/data';
 
 export interface SqlQueryBuilderProps {
-  query: any;
+  builderState: any;
   onChange: (query: any) => void;
 }
 

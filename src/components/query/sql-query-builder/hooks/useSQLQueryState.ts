@@ -1,5 +1,6 @@
 // hooks/useSQLQueryState.ts
 import { useState, useEffect, useRef } from 'react';
+import { isEqual } from 'lodash';
 import { SitewiseQueryState, AssetProperty, mockAssetModels, timeIntervalProperty } from '../types';
 import { validateQuery } from '../utils/validateQuery';
 import { generateQueryPreview } from '../utils/queryGenerator';
@@ -27,8 +28,10 @@ export const useSQLQueryState = ({ initialQuery, onChange }: UseSQLQueryStateOpt
   const queryStateRef = useRef(queryState);
 
   useEffect(() => {
-    queryStateRef.current = queryState;
-    onChange(queryState);
+    if (!isEqual(queryStateRef.current, queryState)) {
+      queryStateRef.current = queryState;
+      onChange(queryState);
+    }
   }, [queryState, onChange]);
 
   useEffect(() => {
