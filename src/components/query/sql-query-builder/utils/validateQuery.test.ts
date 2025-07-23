@@ -51,7 +51,7 @@ describe('validateQuery', () => {
       ...defaultSitewiseQueryState,
       selectedAssetModel: 'asset',
       selectFields: [{ column: 'asset_id' }],
-      whereConditions: [{ column: 'asset_name', operator: '', value: '', logicalOperator: 'AND' }],
+      whereConditions: [{ column: 'asset_name', operator: '', value: '' }],
     };
 
     const errors = validateQuery(query);
@@ -65,7 +65,7 @@ describe('validateQuery', () => {
       ...defaultSitewiseQueryState,
       selectedAssetModel: 'asset',
       selectFields: [{ column: 'asset_id' }],
-      whereConditions: [{ column: '', operator: '', value: '', logicalOperator: 'AND' }],
+      whereConditions: [{ column: '', operator: '', value: '' }],
     };
 
     const errors = validateQuery(query);

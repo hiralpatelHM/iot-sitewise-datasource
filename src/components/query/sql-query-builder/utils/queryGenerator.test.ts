@@ -51,7 +51,7 @@ describe('generateQueryPreview', () => {
     };
 
     const preview = await generateQueryPreview(query);
-    expect(preview).toContain('WHERE prop-1 = "100" AND prop-2 != "200"');
+    expect(preview).toContain("WHERE prop-1 = '100' AND prop-2 != '200'");
   });
 
   it('includes aggregation and alias in SELECT', async () => {
@@ -110,7 +110,7 @@ describe('generateQueryPreview', () => {
     expect(preview).toContain('LIMIT 10');
   });
 
-  it('handles CAST and DATE_BIN functions', async () => {
+  it('handles CAST, NOW and DATE_BIN functions', async () => {
     const query: SitewiseQueryState = {
       selectedAssetModel: 'model-1',
       selectedAssets: [],
@@ -122,6 +122,11 @@ describe('generateQueryPreview', () => {
         },
         {
           column: 'prop-2',
+          aggregation: 'NOW',
+          functionArg: '',
+        },
+        {
+          column: 'prop-3',
           aggregation: 'DATE_ADD',
           functionArg: '1d',
           functionArgValue: '0',
@@ -136,6 +141,7 @@ describe('generateQueryPreview', () => {
 
     const preview = await generateQueryPreview(query);
     expect(preview).toContain('CAST(prop-1 AS DOUBLE)');
-    expect(preview).toContain('DATE_ADD(1d, 0, prop-2)');
+    expect(preview).toContain('NOW()');
+    expect(preview).toContain('DATE_ADD(1d, 0, prop-3)');
   });
 });

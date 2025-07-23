@@ -1,4 +1,4 @@
-import { SitewiseQueryState, isCastFunction, isDateFunction, mockAssetModels } from '../types';
+import { SitewiseQueryState, isCastFunction, isDateFunction, isNowFunction, mockAssetModels } from '../types';
 
 export const generateQueryPreview = async (queryState: SitewiseQueryState): Promise<string> => {
   const selectedModelForPreview = mockAssetModels.find((model) => model.id === queryState.selectedAssetModel);
@@ -22,6 +22,8 @@ export const generateQueryPreview = async (queryState: SitewiseQueryState): Prom
           name = `${field.aggregation}(${interval}, ${offset}, ${baseName})`;
         } else if (isCastFunction(field.aggregation) && field.functionArg) {
           name = `CAST(${baseName} AS ${field.functionArg})`;
+        } else if (isNowFunction(field.aggregation)) {
+          name = `NOW()`;
         } else if (field.aggregation) {
           name = `${field.aggregation}(${baseName})`;
         }
@@ -34,21 +36,20 @@ export const generateQueryPreview = async (queryState: SitewiseQueryState): Prom
   let sqlPreview = `SELECT ${
     selectedProperties.length > 0 ? selectedProperties.join(', ') : '*'
   } FROM ${queryState.selectedAssetModel}`;
-
   if (queryState.whereConditions && queryState.whereConditions.length > 0) {
     const conditions = queryState.whereConditions
       .filter((c) => c.column && c.operator && c.value !== undefined && c.value !== null)
-      .map((c, i) => {
-        const [value, value2] = [c.value, c.value2].map((v) => (v?.startsWith?.('$') ? v : `"${v}"`));
+      .map((c, i, arr) => {
+        const [value, value2] = [c.value, c.value2].map((v) => (v?.startsWith?.('$') ? v : `'${v}'`));
         const condition =
           c.operator === 'BETWEEN' && c.value2
             ? `${c.column} ${c.operator} ${value} ${c.operator2} ${value2}`
             : `${c.column} ${c.operator} ${value}`;
-        const logicalOp = c.logicalOperator ?? 'AND';
-        return i === 0 ? condition : `${logicalOp} ${condition}`;
+        const logicalOp = i < arr.length - 1 ? `${c.logicalOperator ?? 'AND'}` : '';
+        return `${condition} ${logicalOp} `;
       });
     if (conditions.length > 0) {
-      sqlPreview += `\nWHERE ${conditions.join(' ')}`;
+      sqlPreview += `\nWHERE ${conditions.join('')}`;
     }
   }
 

@@ -22,7 +22,7 @@ const mockQuery: SitewiseQueryState = {
   selectedAssetModel: 'asset',
   selectedAssets: ['asset-1'],
   selectFields: [{ column: 'asset_name', aggregation: '', alias: 'name' }],
-  whereConditions: [{ column: 'asset_id', operator: '=', value: '123', logicalOperator: 'AND' }],
+  whereConditions: [{ column: 'asset_id', operator: '=', value: '123' }],
   groupByTime: '1m',
   groupByTags: ['department'],
   orderByFields: [{ column: 'asset_name', direction: 'ASC' }],

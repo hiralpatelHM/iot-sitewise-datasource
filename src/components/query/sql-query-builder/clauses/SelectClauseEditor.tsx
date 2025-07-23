@@ -63,7 +63,13 @@ export const SelectClauseEditor: React.FC<SelectClauseEditorProps> = ({
                     value: func.value,
                   }))}
                   value={field.aggregation}
-                  onChange={(option) => updateSelectField(index, { aggregation: option?.value || '' })}
+                  onChange={(option) =>
+                    updateSelectField(index, {
+                      aggregation: option?.value || '',
+                      functionArg: '',
+                      functionArgValue: '',
+                    })
+                  }
                   placeholder="No function"
                 />
               </EditorField>
