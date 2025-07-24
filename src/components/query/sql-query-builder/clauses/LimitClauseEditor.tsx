@@ -1,4 +1,3 @@
-// LimitClauseEditor.tsx
 import React from 'react';
 import { Input } from '@grafana/ui';
 import { EditorField, EditorFieldGroup, EditorRow } from '@grafana/plugin-ui';

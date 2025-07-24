@@ -62,7 +62,10 @@ export const useSQLQueryState = ({ initialQuery, onChange }: UseSQLQueryStateOpt
 
   const selectedModel = mockAssetModels.find((model) => model.id === queryState.selectedAssetModel);
   const availableProperties = selectedModel?.properties || [];
-  const availablePropertiesForGrouping: AssetProperty[] = [timeIntervalProperty, ...availableProperties];
+  const filteredProperties = availableProperties.filter((prop) =>
+    queryState.selectFields.some((field) => field.column === prop.name)
+  );
+  const availablePropertiesForGrouping: AssetProperty[] = [timeIntervalProperty, ...filteredProperties];
 
   return {
     queryState,
