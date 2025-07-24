@@ -53,19 +53,21 @@ export const OrderByClauseEditor: React.FC<OrderByClauseEditorProps> = ({
               />
             </EditorField>
 
-            <EditorField label="" width={30}>
-              <Select
-                options={[
-                  { label: 'Ascending', value: 'ASC' },
-                  { label: 'Descending', value: 'DESC' },
-                ]}
-                value={field.direction}
-                onChange={(option) =>
-                  updateOrderByField(index, { direction: (option?.value as 'ASC' | 'DESC') || 'ASC' })
-                }
-                placeholder="Direction"
-              />
-            </EditorField>
+            {field.column ? (
+              <EditorField label="" width={30}>
+                <Select
+                  options={[
+                    { label: 'Ascending', value: 'ASC' },
+                    { label: 'Descending', value: 'DESC' },
+                  ]}
+                  value={field.direction}
+                  onChange={(option) =>
+                    updateOrderByField(index, { direction: (option?.value as 'ASC' | 'DESC') || 'ASC' })
+                  }
+                  placeholder="Direction"
+                />
+              </EditorField>
+            ) : null}
 
             <EditorField label="" width={15}>
               <div>

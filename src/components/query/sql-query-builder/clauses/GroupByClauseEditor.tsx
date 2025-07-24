@@ -90,11 +90,11 @@ export const GroupByClauseEditor: React.FC<GroupByClauseEditorProps> = ({
         {groupByTags.includes('timeInterval') && (
           <EditorField label="" width={15}>
             <Select
-              options={[{ label: 'No grouping', value: '' }, ...timeIntervals]}
+              options={timeIntervals}
               value={
                 timeIntervals.find((ti) => ti.value === groupByTime) || {
-                  label: 'No grouping',
-                  value: '',
+                  label: '1s',
+                  value: '1s',
                 }
               }
               onChange={handleGroupByTimeChange}

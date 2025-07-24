@@ -72,9 +72,7 @@ export const generateQueryPreview = async (queryState: SitewiseQueryState): Prom
     }
   }
 
-  if (queryState.limit) {
-    sqlPreview += `\nLIMIT ${queryState.limit}`;
-  }
+  sqlPreview += `\nLIMIT ${typeof queryState.limit === 'number' ? queryState.limit : 100}`;
 
   return sqlPreview;
 };
