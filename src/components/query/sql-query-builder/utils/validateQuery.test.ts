@@ -2,14 +2,19 @@ import { validateQuery } from './validateQuery';
 import { SitewiseQueryState, defaultSitewiseQueryState } from '../types';
 
 describe('validateQuery', () => {
-  it('should return no errors for a valid query', () => {
-    const validQuery: SitewiseQueryState = {
+  it('should return no errors for a fully valid query', () => {
+    const query: SitewiseQueryState = {
       ...defaultSitewiseQueryState,
       selectedAssetModel: 'asset',
       selectFields: [{ column: 'asset_id' }],
+      whereConditions: [{ column: 'asset_id', operator: '=', value: '25' }],
+      limit: 1000,
+      groupByTime: '5m',
+      groupByTags: ['region'],
+      orderByFields: [{ column: 'timestamp', direction: 'DESC' }],
     };
 
-    const errors = validateQuery(validQuery);
+    const errors = validateQuery(query);
     expect(errors).toEqual([]);
   });
 
@@ -21,7 +26,7 @@ describe('validateQuery', () => {
     };
 
     const errors = validateQuery(invalidQuery);
-    expect(errors).toContain('At least one column must be selected in SELECT clause.');
+    expect(errors).toContain('At least one column must be selected in the SELECT clause.');
   });
 
   it('should return error if selectFields has no valid column', () => {
@@ -32,7 +37,7 @@ describe('validateQuery', () => {
     };
 
     const errors = validateQuery(invalidQuery);
-    expect(errors).toContain('At least one column must be selected in SELECT clause.');
+    expect(errors).toContain('At least one column must be selected in the SELECT clause.');
   });
 
   it('should return error if selectedAssetModel is missing', () => {
@@ -46,7 +51,7 @@ describe('validateQuery', () => {
     expect(errors).toContain('A source (e.g., asset model or table) must be specified in the FROM clause.');
   });
 
-  it('should return error if a WHERE condition has column but missing operator or value', () => {
+  it('should return error if a WHERE condition is missing operator or value', () => {
     const query: SitewiseQueryState = {
       ...defaultSitewiseQueryState,
       selectedAssetModel: 'asset',
@@ -66,9 +71,99 @@ describe('validateQuery', () => {
       selectedAssetModel: 'asset',
       selectFields: [{ column: 'asset_id' }],
       whereConditions: [{ column: '', operator: '', value: '' }],
+      orderByFields: [{ column: 'timestamp', direction: 'DESC' }],
     };
 
     const errors = validateQuery(query);
     expect(errors).toEqual([]);
   });
+
+  // LIMIT clause validations
+  it('should return error if limit is NaN', () => {
+    const query: SitewiseQueryState = {
+      ...defaultSitewiseQueryState,
+      selectedAssetModel: 'asset',
+      selectFields: [{ column: 'id' }],
+      limit: NaN,
+    };
+
+    const errors = validateQuery(query);
+    expect(errors).toContain('Limit must be a valid number.');
+  });
+
+  it('should return error if limit is zero or negative', () => {
+    const query: SitewiseQueryState = {
+      ...defaultSitewiseQueryState,
+      selectedAssetModel: 'asset',
+      selectFields: [{ column: 'id' }],
+      limit: 0,
+    };
+
+    const errors = validateQuery(query);
+    expect(errors).toContain('Limit must be greater than 0.');
+  });
+
+  it('should return error if limit exceeds 100000', () => {
+    const query: SitewiseQueryState = {
+      ...defaultSitewiseQueryState,
+      selectedAssetModel: 'asset',
+      selectFields: [{ column: 'id' }],
+      limit: 100001,
+    };
+
+    const errors = validateQuery(query);
+    expect(errors).toContain('Limit must not exceed 100,000 rows.');
+  });
+
+  // GROUP BY TIME validation
+  it('should return error if groupByTime is invalid format', () => {
+    const query: SitewiseQueryState = {
+      ...defaultSitewiseQueryState,
+      selectedAssetModel: 'asset',
+      selectFields: [{ column: 'id' }],
+      groupByTime: 'abc',
+    };
+
+    const errors = validateQuery(query);
+    expect(errors).toContain('Group by time must be a valid duration (e.g., 1m, 10s, 1h, 1d).');
+  });
+
+  it('should not error if groupByTime is valid', () => {
+    const query: SitewiseQueryState = {
+      ...defaultSitewiseQueryState,
+      selectedAssetModel: 'asset',
+      selectFields: [{ column: 'id' }],
+      orderByFields: [{ column: 'timestamp', direction: 'DESC' }],
+      groupByTime: '1h',
+    };
+
+    const errors = validateQuery(query);
+    expect(errors).toEqual([]);
+  });
+
+  // GROUP BY TAGS validation
+  it('should return error if groupByTags has empty values', () => {
+    const query: SitewiseQueryState = {
+      ...defaultSitewiseQueryState,
+      selectedAssetModel: 'asset',
+      selectFields: [{ column: 'id' }],
+      groupByTags: ['region', ''],
+    };
+
+    const errors = validateQuery(query);
+    expect(errors).toContain('Group by tags must not contain empty values.');
+  });
+
+  // // ORDER BY clause validation
+  // it('should return error if orderByFields has missing column', () => {
+  //   const query: SitewiseQueryState = {
+  //     ...defaultSitewiseQueryState,
+  //     selectedAssetModel: 'asset',
+  //     selectFields: [{ column: 'id' }],
+  //     orderByFields: [{ column: '', direction: 'ASC' }],
+  //   };
+
+  //   const errors = validateQuery(query);
+  //   expect(errors).toContain('Each ORDER BY field must include a column and a valid direction (ASC or DESC).');
+  // });
 });

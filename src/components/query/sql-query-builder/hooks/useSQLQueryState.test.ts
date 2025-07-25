@@ -90,13 +90,15 @@ describe('useSQLQueryState', () => {
     const { result } = renderHook(() => useSQLQueryState({ initialQuery: mockQuery, onChange }));
 
     const selectedModel = mockAssetModels.find((m) => m.id === 'asset');
+    const availableProperties = selectedModel?.properties ?? [];
+
+    const filteredProperties = availableProperties.filter((prop) =>
+      mockQuery.selectFields.some((field) => field.column === prop.name)
+    );
 
     expect(result.current.selectedModel).toEqual(selectedModel);
-    expect(result.current.availableProperties).toEqual(selectedModel?.properties);
-    expect(result.current.availablePropertiesForGrouping).toEqual([
-      timeIntervalProperty,
-      ...(selectedModel?.properties ?? []),
-    ]);
+    expect(result.current.availableProperties).toEqual(availableProperties);
+    expect(result.current.availablePropertiesForGrouping).toEqual([timeIntervalProperty, ...filteredProperties]);
   });
 
   it('can update deeply nested fields like selectFields', async () => {

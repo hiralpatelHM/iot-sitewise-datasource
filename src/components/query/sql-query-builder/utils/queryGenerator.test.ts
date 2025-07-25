@@ -71,7 +71,7 @@ describe('generateQueryPreview', () => {
 
     const preview = await generateQueryPreview(query);
     expect(preview).toContain('AVG(');
-    expect(preview).toContain('AS avg1');
+    expect(preview).toContain('AS "avg1"');
     expect(preview).toContain('MAX(');
   });
 

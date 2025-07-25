@@ -28,7 +28,7 @@ export const generateQueryPreview = async (queryState: SitewiseQueryState): Prom
           name = `${field.aggregation}(${baseName})`;
         }
         if (field.alias) {
-          name += ` AS ${field.alias}`;
+          name += ` AS "${field.alias}"`;
         }
         return name;
       }) ?? [];

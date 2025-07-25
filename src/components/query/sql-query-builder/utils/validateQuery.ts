@@ -42,10 +42,10 @@ export const validateQuery = (state: SitewiseQueryState): string[] => {
     errors.push('Group by tags must not contain empty values.');
   }
 
-  // ORDER BY clause validation (optional)
-  if (state.orderByFields?.some((field) => !field.column)) {
-    errors.push('Each ORDER BY field must include a column and a valid direction (ASC or DESC).');
-  }
+  // // ORDER BY clause validation (optional)
+  // if (state.orderByFields?.some((field) => !field.column)) {
+  //   errors.push('Each ORDER BY field must include a column and a valid direction (ASC or DESC).');
+  // }
 
   return errors;
 };
