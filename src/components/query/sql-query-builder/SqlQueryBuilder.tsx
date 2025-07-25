@@ -1,5 +1,5 @@
 import React from 'react'; // No need for useEffect, useRef, useState directly in component
-import { EditorRows } from '@grafana/plugin-ui';
+import { EditorRows, EditorRow } from '@grafana/plugin-ui';
 import { SqlQueryBuilderProps, mockAssetModels } from './types';
 import { FromClauseEditor } from './clauses/FromClauseEditor';
 import { SelectClauseEditor } from './clauses/SelectClauseEditor';
@@ -20,12 +20,17 @@ export function SqlQueryBuilder({ builderState, onChange }: SqlQueryBuilderProps
   return (
     <div className="gf-form-group">
       <EditorRows>
-        {/* FROM Section */}
-        <FromClauseEditor
-          assetModels={mockAssetModels}
-          selectedModelId={queryState.selectedAssetModel || ''}
-          updateQuery={updateQuery}
-        />
+        <EditorRow>
+          {/* FROM Section */}
+          <FromClauseEditor
+            assetModels={mockAssetModels}
+            selectedModelId={queryState.selectedAssetModel || ''}
+            updateQuery={updateQuery}
+          />
+
+          {/* Limit Clause */}
+          <LimitClauseEditor limit={queryState.limit} updateQuery={updateQuery} />
+        </EditorRow>
 
         {/* SELECT Section */}
         <SelectClauseEditor
@@ -55,9 +60,6 @@ export function SqlQueryBuilder({ builderState, onChange }: SqlQueryBuilderProps
           updateQuery={updateQuery}
           availableProperties={availableProperties}
         />
-
-        {/* LIMIT Section */}
-        <LimitClauseEditor limit={queryState.limit} updateQuery={updateQuery} />
 
         {/* Timezone (if needed, uncomment and connect to queryState.timezone) */}
         {/* <EditorField

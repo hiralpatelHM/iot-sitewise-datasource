@@ -47,7 +47,7 @@ export const OrderByClauseEditor: React.FC<OrderByClauseEditorProps> = ({
                   label: prop.name,
                   value: prop.id,
                 }))}
-                value={field.column}
+                value={field.column ? { label: field.column, value: field.column } : null}
                 onChange={(option) => updateOrderByField(index, { column: option?.value || '' })}
                 placeholder="Select column..."
               />

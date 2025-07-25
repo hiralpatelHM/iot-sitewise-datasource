@@ -175,10 +175,10 @@ export const whereOperators = [
   { label: 'LIKE', value: 'LIKE' },
   { label: 'IN', value: 'IN' },
   { label: 'BETWEEN', value: 'BETWEEN' },
-  { label: 'IS NULL', value: 'IS NULL' },
-  { label: 'IS NOT NULL', value: 'IS NOT NULL' },
-  { label: 'IS NAN', value: 'IS NAN' },
-  { label: 'IS NOT NAN', value: 'IS NOT NAN' },
+  // { label: 'IS NULL', value: 'IS NULL' },
+  // { label: 'IS NOT NULL', value: 'IS NOT NULL' },
+  // { label: 'IS NAN', value: 'IS NAN' },
+  // { label: 'IS NOT NAN', value: 'IS NOT NAN' },
 ];
 
 export const timeIntervals: Array<SelectableValue<string>> = [
@@ -204,14 +204,14 @@ export const allFunctions: Array<{
   { group: 'Aggregate', label: 'MIN', value: 'MIN' },
   { group: 'Aggregate', label: 'STDDEV', value: 'STDDEV' },
   { group: 'String', label: 'LENGTH', value: 'LENGTH' },
-  { group: 'String', label: 'CONCAT', value: 'CONCAT' },
+  // { group: 'String', label: 'CONCAT', value: 'CONCAT' },
   { group: 'String', label: 'SUBSTR', value: 'SUBSTR' },
   { group: 'String', label: 'UPPER', value: 'UPPER' },
   { group: 'String', label: 'LOWER', value: 'LOWER' },
   { group: 'String', label: 'TRIM', value: 'TRIM' },
   { group: 'String', label: 'LTRIM', value: 'LTRIM' },
   { group: 'String', label: 'RTRIM', value: 'RTRIM' },
-  { group: 'String', label: 'STR_REPLACE', value: 'STR_REPLACE' },
+  // { group: 'String', label: 'STR_REPLACE', value: 'STR_REPLACE' },
   { group: 'Math', label: 'POWER', value: 'POWER' },
   { group: 'Math', label: 'ROUND', value: 'ROUND' },
   { group: 'Math', label: 'FLOOR', value: 'FLOOR' },
@@ -224,7 +224,7 @@ export const allFunctions: Array<{
   { group: 'DateTime', label: 'TO_DATE', value: 'TO_DATE' },
   { group: 'DateTime', label: 'TO_TIMESTAMP', value: 'TO_TIMESTAMP' },
   { group: 'DateTime', label: 'TO_TIME', value: 'TO_TIME' },
-  { group: 'Null', label: 'COALESCE', value: 'COALESCE' },
+  // { group: 'Null', label: 'COALESCE', value: 'COALESCE' },
 ];
 
 export const DATE_FUNCTIONS = ['DATE_ADD', 'DATE_SUB', 'TIMESTAMP_ADD', 'TIMESTAMP_SUB'];
@@ -243,7 +243,7 @@ export function isNowFunction(funcName?: string): boolean {
 
 // tooltipMessages.ts
 export const tooltipMessages: Record<string, string> = {
-  FROM: 'Select the source table or measurement to query data from.',
+  FROM: 'Select the view to query data from.',
   SELECT: 'Choose the fields or columns you want to retrieve in the result.',
   WHERE: 'Filter rows based on specific conditions.',
   'GROUP BY': 'Select one or more columns to group your query by',
