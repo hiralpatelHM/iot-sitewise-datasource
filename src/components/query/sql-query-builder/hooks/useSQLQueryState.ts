@@ -1,7 +1,7 @@
 // hooks/useSQLQueryState.ts
 import { useState, useEffect, useRef } from 'react';
 import { isEqual } from 'lodash';
-import { SitewiseQueryState, AssetProperty, mockAssetModels, timeIntervalProperty } from '../types';
+import { SitewiseQueryState, AssetProperty, mockAssetModels } from '../types';
 import { validateQuery } from '../utils/validateQuery';
 import { generateQueryPreview } from '../utils/queryGenerator';
 
@@ -62,10 +62,9 @@ export const useSQLQueryState = ({ initialQuery, onChange }: UseSQLQueryStateOpt
 
   const selectedModel = mockAssetModels.find((model) => model.id === queryState.selectedAssetModel);
   const availableProperties = selectedModel?.properties || [];
-  const filteredProperties = availableProperties.filter((prop) =>
+  const availablePropertiesForGrouping = availableProperties.filter((prop) =>
     queryState.selectFields.some((field) => field.column === prop.name)
   );
-  const availablePropertiesForGrouping: AssetProperty[] = [timeIntervalProperty, ...filteredProperties];
 
   return {
     queryState,

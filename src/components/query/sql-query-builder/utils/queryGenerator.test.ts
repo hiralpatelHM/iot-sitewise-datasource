@@ -9,6 +9,7 @@ describe('generateQueryPreview', () => {
       selectFields: [],
       whereConditions: [],
       groupByTags: [],
+      havingConditions: [],
       orderByFields: [],
       timezone: 'Asia/Tokyo',
       rawSQL: '',
@@ -25,6 +26,7 @@ describe('generateQueryPreview', () => {
       selectFields: [{ column: 'prop-1', aggregation: '', alias: '' }],
       whereConditions: [],
       groupByTags: [],
+      havingConditions: [],
       orderByFields: [],
       timezone: 'Asia/Tokyo',
       rawSQL: '',
@@ -45,6 +47,7 @@ describe('generateQueryPreview', () => {
         { column: 'prop-2', operator: '!=', value: '200' },
       ],
       groupByTags: [],
+      havingConditions: [],
       orderByFields: [],
       timezone: 'Asia/Tokyo',
       rawSQL: '',
@@ -64,6 +67,7 @@ describe('generateQueryPreview', () => {
       ],
       whereConditions: [],
       groupByTags: [],
+      havingConditions: [],
       orderByFields: [],
       timezone: 'Asia/Tokyo',
       rawSQL: '',
@@ -83,6 +87,7 @@ describe('generateQueryPreview', () => {
       whereConditions: [],
       groupByTags: ['prop-1'],
       groupByTime: '1h',
+      havingConditions: [],
       orderByFields: [{ column: 'prop-1', direction: 'DESC' }],
       timezone: 'Asia/Tokyo',
       rawSQL: '',
@@ -100,6 +105,7 @@ describe('generateQueryPreview', () => {
       selectFields: [{ column: 'prop-1', aggregation: '', alias: '' }],
       whereConditions: [],
       groupByTags: [],
+      havingConditions: [],
       orderByFields: [],
       limit: 10,
       timezone: 'Asia/Tokyo',
@@ -134,6 +140,7 @@ describe('generateQueryPreview', () => {
       ],
       whereConditions: [],
       groupByTags: [],
+      havingConditions: [],
       orderByFields: [],
       timezone: 'Asia/Tokyo',
       rawSQL: '',
@@ -143,5 +150,69 @@ describe('generateQueryPreview', () => {
     expect(preview).toContain('CAST(prop-1 AS DOUBLE)');
     expect(preview).toContain('NOW()');
     expect(preview).toContain('DATE_ADD(1d, 0, prop-3)');
+  });
+
+  it('includes simple HAVING clause with aggregation', async () => {
+    const query: SitewiseQueryState = {
+      selectedAssetModel: 'model-1',
+      selectedAssets: [],
+      selectFields: [{ column: 'prop-1', aggregation: 'COUNT', alias: '' }],
+      whereConditions: [],
+      groupByTags: ['prop-1'],
+      havingConditions: [{ aggregation: 'COUNT', column: 'prop-1', operator: '>', value: '5', logicalOperator: 'AND' }],
+      orderByFields: [],
+      timezone: 'Asia/Tokyo',
+      rawSQL: '',
+    };
+
+    const preview = await generateQueryPreview(query);
+    expect(preview).toContain("HAVING COUNT(prop-1) > '5'");
+  });
+
+  it('includes multiple HAVING conditions with logical operators', async () => {
+    const query: SitewiseQueryState = {
+      selectedAssetModel: 'model-2',
+      selectedAssets: [],
+      selectFields: [
+        { column: 'prop-1', aggregation: 'SUM', alias: '' },
+        { column: 'prop-2', aggregation: 'AVG', alias: '' },
+      ],
+      whereConditions: [],
+      groupByTags: ['prop-2'],
+      havingConditions: [
+        { aggregation: 'SUM', column: 'prop-1', operator: '>=', value: '100', logicalOperator: 'AND' },
+        { aggregation: 'AVG', column: 'prop-2', operator: '<', value: '50', logicalOperator: 'OR' },
+        { aggregation: 'COUNT', column: 'prop-2', operator: '=', value: '10', logicalOperator: 'AND' },
+      ],
+      orderByFields: [],
+      timezone: 'Asia/Tokyo',
+      rawSQL: '',
+    };
+
+    const preview = await generateQueryPreview(query);
+    expect(preview).toContain("HAVING SUM(prop-1) >= '100' AND AVG(prop-2) < '50' OR COUNT(prop-2) = '10'");
+  });
+
+  it('skips invalid or empty HAVING conditions', async () => {
+    const query: SitewiseQueryState = {
+      selectedAssetModel: 'model-3',
+      selectedAssets: [],
+      selectFields: [{ column: 'prop-1', aggregation: 'MAX', alias: '' }],
+      whereConditions: [],
+      groupByTags: ['prop-1'],
+      havingConditions: [
+        { aggregation: 'MAX', column: '', operator: '=', value: '10', logicalOperator: 'AND' }, // invalid: empty column
+        { aggregation: '', column: 'prop-1', operator: '=', value: '20', logicalOperator: 'AND' }, // invalid: empty aggregation
+        { aggregation: 'MAX', column: 'prop-1', operator: '=', value: '20', logicalOperator: 'AND' }, // valid
+      ],
+      orderByFields: [],
+      timezone: 'Asia/Tokyo',
+      rawSQL: '',
+    };
+
+    const preview = await generateQueryPreview(query);
+    expect(preview).toContain("HAVING MAX(prop-1) = '20'");
+    expect(preview).not.toContain('MAX()');
+    expect(preview).not.toContain("= '10'");
   });
 });

@@ -27,6 +27,16 @@ export interface OrderByField {
   direction: 'ASC' | 'DESC';
 }
 
+export type AggregationFunction = 'COUNT' | 'SUM' | 'AVG' | 'MAX' | 'MIN';
+
+export interface HavingCondition {
+  aggregation: AggregationFunction;
+  column: string;
+  operator: '=' | '!=' | '>' | '<' | '>=' | '<=';
+  value: string;
+  logicalOperator?: 'AND' | 'OR';
+}
+
 export interface SitewiseQueryState {
   selectedAssetModel?: string;
   selectedAssets: string[];
@@ -35,6 +45,7 @@ export interface SitewiseQueryState {
   groupByTime?: string;
   groupByTags: string[];
   orderByFields: OrderByField[];
+  havingConditions: HavingCondition[];
   limit?: number;
   timezone: string;
   rawSQL: string;
@@ -48,6 +59,7 @@ export const defaultSitewiseQueryState: SitewiseQueryState = {
   groupByTime: '',
   groupByTags: [],
   orderByFields: [{ column: '', direction: 'ASC' }],
+  havingConditions: [{ aggregation: 'COUNT', column: '', operator: '=', value: '', logicalOperator: 'AND' }],
   limit: 1000,
   timezone: 'UTC',
   rawSQL: '',
@@ -248,5 +260,6 @@ export const tooltipMessages: Record<string, string> = {
   WHERE: 'Filter rows based on specific conditions.',
   'GROUP BY': 'Select one or more columns to group your query by',
   'ORDER BY': 'Sort the result set by one or more columns.',
+  HAVING: 'Filter groups based on aggregate conditions.',
   LIMIT: 'Restrict the number of records returned by the query.',
 };

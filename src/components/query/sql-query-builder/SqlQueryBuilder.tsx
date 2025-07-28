@@ -9,6 +9,7 @@ import { LimitClauseEditor } from './clauses/LimitClauseEditor';
 import { OrderByClauseEditor } from './clauses/OrderByClauseEditor';
 import { QueryPreviewDisplay } from './QueryPreviewDisplay';
 import { useSQLQueryState } from './hooks/useSQLQueryState';
+import { HavingClauseEditor } from './clauses/HavingClauseEditor';
 
 export function SqlQueryBuilder({ builderState, onChange }: SqlQueryBuilderProps) {
   const { queryState, preview, validationErrors, updateQuery, availableProperties, availablePropertiesForGrouping } =
@@ -16,6 +17,8 @@ export function SqlQueryBuilder({ builderState, onChange }: SqlQueryBuilderProps
       initialQuery: builderState,
       onChange: onChange,
     });
+
+  const isHavingVisible = queryState.groupByTags.length > 0;
 
   return (
     <div className="gf-form-group">
@@ -53,6 +56,15 @@ export function SqlQueryBuilder({ builderState, onChange }: SqlQueryBuilderProps
           groupByTime={queryState.groupByTime || ''}
           updateQuery={updateQuery}
         />
+
+        {/* HAVING Section */}
+        {isHavingVisible && (
+          <HavingClauseEditor
+            havingConditions={queryState.havingConditions}
+            updateQuery={updateQuery}
+            availableProperties={availablePropertiesForGrouping}
+          />
+        )}
 
         {/* ORDER BY Section */}
         <OrderByClauseEditor

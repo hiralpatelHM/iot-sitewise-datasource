@@ -2,7 +2,7 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import { useSQLQueryState } from './useSQLQueryState';
 import * as validateModule from '../utils/validateQuery';
 import * as generatorModule from '../utils/queryGenerator';
-import { SitewiseQueryState, mockAssetModels, timeIntervalProperty, defaultSitewiseQueryState } from '../types';
+import { SitewiseQueryState, mockAssetModels, defaultSitewiseQueryState } from '../types';
 
 // Mocks
 jest.mock('../utils/validateQuery', () => ({
@@ -92,13 +92,13 @@ describe('useSQLQueryState', () => {
     const selectedModel = mockAssetModels.find((m) => m.id === 'asset');
     const availableProperties = selectedModel?.properties ?? [];
 
-    const filteredProperties = availableProperties.filter((prop) =>
+    const availablePropertiesForGrouping = availableProperties.filter((prop) =>
       mockQuery.selectFields.some((field) => field.column === prop.name)
     );
 
     expect(result.current.selectedModel).toEqual(selectedModel);
     expect(result.current.availableProperties).toEqual(availableProperties);
-    expect(result.current.availablePropertiesForGrouping).toEqual([timeIntervalProperty, ...filteredProperties]);
+    expect(result.current.availablePropertiesForGrouping).toEqual(availablePropertiesForGrouping);
   });
 
   it('can update deeply nested fields like selectFields', async () => {
