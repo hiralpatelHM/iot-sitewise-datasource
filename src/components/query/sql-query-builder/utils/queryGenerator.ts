@@ -77,7 +77,7 @@ const buildHavingClause = (conditions: HavingCondition[] = []): string => {
     return '';
   }
 
-  const parts = validConditions.map((c) => `${c.aggregation}(${c.column}) ${c.operator} ${quote(c.value)}`);
+  const parts = validConditions.map((c) => `${c.aggregation}(${c.column}) ${c.operator} ${Number(c.value)}`);
 
   return (
     'HAVING ' +

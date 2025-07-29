@@ -1,5 +1,5 @@
 import { generateQueryPreview } from './queryGenerator';
-import { SitewiseQueryState } from '../types';
+import { AggregationFunction, SitewiseQueryState } from '../types';
 
 describe('generateQueryPreview', () => {
   it('returns message when asset model is not selected', async () => {
@@ -166,7 +166,7 @@ describe('generateQueryPreview', () => {
     };
 
     const preview = await generateQueryPreview(query);
-    expect(preview).toContain("HAVING COUNT(prop-1) > '5'");
+    expect(preview).toContain('HAVING COUNT(prop-1) > 5');
   });
 
   it('includes multiple HAVING conditions with logical operators', async () => {
@@ -190,7 +190,7 @@ describe('generateQueryPreview', () => {
     };
 
     const preview = await generateQueryPreview(query);
-    expect(preview).toContain("HAVING SUM(prop-1) >= '100' AND AVG(prop-2) < '50' OR COUNT(prop-2) = '10'");
+    expect(preview).toContain('HAVING SUM(prop-1) >= 100 AND AVG(prop-2) < 50 OR COUNT(prop-2) = 10');
   });
 
   it('skips invalid or empty HAVING conditions', async () => {
@@ -202,7 +202,13 @@ describe('generateQueryPreview', () => {
       groupByTags: ['prop-1'],
       havingConditions: [
         { aggregation: 'MAX', column: '', operator: '=', value: '10', logicalOperator: 'AND' }, // invalid: empty column
-        { aggregation: '', column: 'prop-1', operator: '=', value: '20', logicalOperator: 'AND' }, // invalid: empty aggregation
+        {
+          aggregation: '' as unknown as AggregationFunction,
+          column: 'prop-1',
+          operator: '=',
+          value: '20',
+          logicalOperator: 'AND',
+        }, // invalid: empty aggregation
         { aggregation: 'MAX', column: 'prop-1', operator: '=', value: '20', logicalOperator: 'AND' }, // valid
       ],
       orderByFields: [],
@@ -211,7 +217,7 @@ describe('generateQueryPreview', () => {
     };
 
     const preview = await generateQueryPreview(query);
-    expect(preview).toContain("HAVING MAX(prop-1) = '20'");
+    expect(preview).toContain('HAVING MAX(prop-1) = 20');
     expect(preview).not.toContain('MAX()');
     expect(preview).not.toContain("= '10'");
   });
