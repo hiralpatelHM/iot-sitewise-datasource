@@ -16,7 +16,7 @@ export function RawQueryEditor(props: Props) {
   const toggleMode = () => {
     setMode((prev) => (prev === 'raw' ? 'builder' : 'raw'));
   };
-  const [builderState, setBuilderState] = useState(defaultSitewiseQueryState);
+  const [builderState, setBuilderState] = useState(query.sqlQueryState || defaultSitewiseQueryState);
 
   const handleQueryChange = useCallback(
     (updatedState: SitewiseQueryState) => {
@@ -24,6 +24,7 @@ export function RawQueryEditor(props: Props) {
       onChange({
         ...query,
         rawSQL: updatedState.rawSQL,
+        sqlQueryState: updatedState,
       });
     },
     [query, onChange]
