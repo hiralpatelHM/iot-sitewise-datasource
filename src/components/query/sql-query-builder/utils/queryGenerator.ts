@@ -1,45 +1,59 @@
 import {
   SitewiseQueryState,
-  isCastFunction,
-  isDateFunction,
-  isNowFunction,
   mockAssetModels,
   HavingCondition,
   SelectField,
   WhereCondition,
+  isFunctionOfType,
 } from '../types';
 
 // -- Helpers --
-const quote = (val: any): string => (typeof val === 'string' && !val.startsWith('$') ? `'${val}'` : val);
+const quote = (val: any): string | undefined =>
+  typeof val === 'string' && val.trim() !== '' && !val.startsWith('$') ? `'${val}'` : val;
 
 const buildSelectClause = (fields: SelectField[], properties: any[]): string => {
-  const parts = fields
-    .filter((field) => field.column)
+  const clauses = fields
+    .filter(({ column }) => column)
     .map((field) => {
-      const prop = properties.find((p) => p.id === field.column);
-      const base = prop?.name || field.column || 'unknown';
+      const base = properties.find((p) => p.id === field.column)?.name || field.column;
+      const { aggregation, functionArg, functionArgValue, functionArgValue2, alias } = field || '';
+
       let expr = base;
 
-      if (isDateFunction(field.aggregation)) {
-        const interval = field.functionArg ?? '1d';
-        const offset = field.functionArgValue ?? '0';
-        expr = `${field.aggregation}(${interval}, ${offset}, ${base})`;
-      } else if (isCastFunction(field.aggregation) && field.functionArg) {
-        expr = `CAST(${base} AS ${field.functionArg})`;
-      } else if (isNowFunction(field.aggregation)) {
-        expr = `NOW()`;
-      } else if (field.aggregation) {
-        expr = `${field.aggregation}(${base})`;
+      if (!aggregation) {
+        return alias ? `${expr} AS "${alias}"` : expr;
       }
 
-      if (field.alias) {
-        expr += ` AS "${field.alias}"`;
+      switch (true) {
+        case isFunctionOfType(aggregation, 'date'):
+          expr = `${aggregation}(${functionArg ?? '1d'}, ${functionArgValue ?? '0'}, ${base})`;
+          break;
+        case isFunctionOfType(aggregation, 'math') || isFunctionOfType(aggregation, 'coalesce'):
+          expr = `${aggregation}(${base}, ${functionArgValue ?? '0'})`;
+          break;
+        case isFunctionOfType(aggregation, 'str'):
+          expr =
+            aggregation === 'STR_REPLACE'
+              ? `${aggregation}(${base}, '${functionArgValue}', '${functionArgValue2}')`
+              : `${aggregation}(${base}, ${functionArgValue}, ${functionArgValue2})`;
+          break;
+        case isFunctionOfType(aggregation, 'concat'):
+          expr = `${aggregation}(${base},${functionArg})`;
+          break;
+        case isFunctionOfType(aggregation, 'cast'):
+          expr = `CAST(${base} AS ${functionArg})`;
+          break;
+        case isFunctionOfType(aggregation, 'now'):
+          expr = 'NOW()';
+          break;
+        default:
+          expr = `${aggregation}(${base})`;
       }
 
-      return expr;
+      return alias ? `${expr} AS "${alias}"` : expr;
     });
 
-  return `SELECT ${parts.length > 0 ? parts.join(', ') : '*'}`;
+  return `SELECT ${clauses.length ? clauses.join(', ') : '*'}`;
 };
 
 const buildWhereClause = (conditions: WhereCondition[] = []): string => {

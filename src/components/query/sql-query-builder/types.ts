@@ -11,6 +11,7 @@ export interface SelectField {
   alias?: string;
   functionArg?: string;
   functionArgValue?: string;
+  functionArgValue2?: string;
 }
 
 export interface WhereCondition {
@@ -27,7 +28,7 @@ export interface OrderByField {
   direction: 'ASC' | 'DESC';
 }
 
-export type AggregationFunction = 'COUNT' | 'SUM' | 'AVG' | 'MAX' | 'MIN';
+export type AggregationFunction = 'COUNT' | 'SUM' | 'AVG' | 'MAX' | 'MIN' | '';
 
 export interface HavingCondition {
   aggregation: AggregationFunction;
@@ -187,10 +188,8 @@ export const whereOperators = [
   { label: 'LIKE', value: 'LIKE' },
   { label: 'IN', value: 'IN' },
   { label: 'BETWEEN', value: 'BETWEEN' },
-  // { label: 'IS NULL', value: 'IS NULL' },
-  // { label: 'IS NOT NULL', value: 'IS NOT NULL' },
-  // { label: 'IS NAN', value: 'IS NAN' },
-  // { label: 'IS NOT NAN', value: 'IS NOT NAN' },
+  { label: 'IS NULL', value: 'IS NULL' },
+  { label: 'IS NOT NULL', value: 'IS NOT NULL' },
 ];
 
 export const timeIntervals: Array<SelectableValue<string>> = [
@@ -216,14 +215,15 @@ export const allFunctions: Array<{
   { group: 'Aggregate', label: 'MIN', value: 'MIN' },
   { group: 'Aggregate', label: 'STDDEV', value: 'STDDEV' },
   { group: 'String', label: 'LENGTH', value: 'LENGTH' },
-  // { group: 'String', label: 'CONCAT', value: 'CONCAT' },
+  { group: 'String', label: 'CONCAT', value: 'CONCAT' },
   { group: 'String', label: 'SUBSTR', value: 'SUBSTR' },
   { group: 'String', label: 'UPPER', value: 'UPPER' },
   { group: 'String', label: 'LOWER', value: 'LOWER' },
   { group: 'String', label: 'TRIM', value: 'TRIM' },
   { group: 'String', label: 'LTRIM', value: 'LTRIM' },
   { group: 'String', label: 'RTRIM', value: 'RTRIM' },
-  // { group: 'String', label: 'STR_REPLACE', value: 'STR_REPLACE' },
+  { group: 'String', label: 'STR_REPLACE', value: 'STR_REPLACE' },
+  { group: 'String', label: 'SUBSTR', value: 'SUBSTR' },
   { group: 'Math', label: 'POWER', value: 'POWER' },
   { group: 'Math', label: 'ROUND', value: 'ROUND' },
   { group: 'Math', label: 'FLOOR', value: 'FLOOR' },
@@ -236,22 +236,37 @@ export const allFunctions: Array<{
   { group: 'DateTime', label: 'TO_DATE', value: 'TO_DATE' },
   { group: 'DateTime', label: 'TO_TIMESTAMP', value: 'TO_TIMESTAMP' },
   { group: 'DateTime', label: 'TO_TIME', value: 'TO_TIME' },
-  // { group: 'Null', label: 'COALESCE', value: 'COALESCE' },
+  { group: 'Null', label: 'COALESCE', value: 'COALESCE' },
 ];
 
-export const DATE_FUNCTIONS = ['DATE_ADD', 'DATE_SUB', 'TIMESTAMP_ADD', 'TIMESTAMP_SUB'];
+export const FUNCTION_TYPES = {
+  date: ['DATE_ADD', 'DATE_SUB', 'TIMESTAMP_ADD', 'TIMESTAMP_SUB'],
+  math: ['POWER', 'ROUND', 'COALESCE'],
+  cast: ['CAST'],
+  now: ['NOW'],
+  str: ['STR_REPLACE', 'SUBSTR'],
+  coalesce: ['COALESCE'],
+  val: ['IS NULL', 'IS NOT NULL'],
+  concat: ['CONCAT'],
+} as const;
 
-export function isDateFunction(funcName?: string): boolean {
-  return funcName ? DATE_FUNCTIONS.includes(funcName) : false;
-}
+export type FunctionType = keyof typeof FUNCTION_TYPES;
+export type FunctionName = (typeof FUNCTION_TYPES)[FunctionType][number];
+export const isFunctionOfType = (fn?: string, ...types: FunctionType[]): fn is FunctionName => {
+  if (!fn) {
+    return false;
+  }
 
-export function isCastFunction(funcName?: string): boolean {
-  return funcName === 'CAST';
-}
+  return types.some((type) => {
+    const functions = FUNCTION_TYPES[type] as readonly string[];
+    return functions.includes(fn);
+  });
+};
 
-export function isNowFunction(funcName?: string): boolean {
-  return funcName === 'NOW';
-}
+export const FUNCTION_ARGS = {
+  DATE: ['DAY', 'MONTH', 'YEAR'],
+  CAST: ['BOOLEAN', 'INTEGER', 'INT', 'TIMESTAMP'],
+};
 
 // tooltipMessages.ts
 export const tooltipMessages: Record<string, string> = {

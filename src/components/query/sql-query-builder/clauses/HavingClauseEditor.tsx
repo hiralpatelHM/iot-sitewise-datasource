@@ -2,7 +2,7 @@ import React from 'react';
 import { Select, IconButton, Tooltip } from '@grafana/ui';
 import { EditorField, EditorFieldGroup, EditorRow } from '@grafana/plugin-ui';
 import { HavingCondition } from '../types';
-import { VariableSuggestInput } from '../VariableInputWithSuggestions';
+import { VariableSuggestInput } from '../VariableSuggestInput';
 import { StyledLabel } from '../StyledLabel';
 
 interface HavingClauseEditorProps {

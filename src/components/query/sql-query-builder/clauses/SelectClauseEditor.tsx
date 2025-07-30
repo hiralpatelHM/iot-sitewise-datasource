@@ -1,7 +1,7 @@
 import React from 'react';
 import { Select, Input, IconButton, Tooltip } from '@grafana/ui';
 import { EditorField, EditorFieldGroup, EditorRow } from '@grafana/plugin-ui';
-import { allFunctions, isCastFunction, isDateFunction, SelectField } from '../types';
+import { allFunctions, FUNCTION_ARGS, isFunctionOfType, SelectField } from '../types';
 import { StyledLabel } from '../StyledLabel';
 
 interface SelectClauseEditorProps {
@@ -33,16 +33,29 @@ export const SelectClauseEditor: React.FC<SelectClauseEditorProps> = ({
     updateQuery({ selectFields: newFields });
   };
 
+  const shouldShowInput1 = (agg: string) => isFunctionOfType(agg, 'date', 'math', 'str', 'coalesce');
+
+  const shouldShowInput2 = (agg: string) => isFunctionOfType(agg, 'str');
+
+  const getFunctionArgs = (agg: string): string[] => {
+    if (isFunctionOfType(agg, 'date')) {
+      return FUNCTION_ARGS.DATE;
+    }
+    if (isFunctionOfType(agg, 'cast')) {
+      return FUNCTION_ARGS.CAST;
+    }
+    if (isFunctionOfType(agg, 'concat')) {
+      return availableProperties.map((p) => p.name);
+    }
+    return [];
+  };
+
   return (
     <>
       {selectFields.map((field, index) => {
-        const functionArgs = isDateFunction(field.aggregation)
-          ? ['DAY', 'MONTH', 'YEAR']
-          : isCastFunction(field.aggregation)
-            ? ['BOOLEAN', 'INTEGER', 'INT', 'TIMESTAMP']
-            : [];
-
-        const functionArgOptions = functionArgs.map((v) => ({ label: v, value: v }));
+        const functionArgs = getFunctionArgs(field.aggregation || '');
+        const showInput1 = shouldShowInput1(field.aggregation || '');
+        const showInput2 = shouldShowInput2(field.aggregation || '');
 
         return (
           <EditorRow key={index}>
@@ -68,6 +81,7 @@ export const SelectClauseEditor: React.FC<SelectClauseEditorProps> = ({
                       aggregation: option?.value || '',
                       functionArg: '',
                       functionArgValue: '',
+                      functionArgValue2: '',
                     })
                   }
                   placeholder="No function"
@@ -76,20 +90,32 @@ export const SelectClauseEditor: React.FC<SelectClauseEditorProps> = ({
               {functionArgs.length > 0 && (
                 <EditorField label="" width={20}>
                   <Select
-                    options={functionArgOptions}
+                    options={functionArgs.map((a) => ({ label: a, value: a }))}
                     value={field.functionArg ? { label: field.functionArg, value: field.functionArg } : null}
-                    onChange={(option) => updateSelectField(index, { functionArg: option?.value || '' })}
+                    onChange={(v) =>
+                      updateSelectField(index, {
+                        functionArg: (v as any)?.value || '',
+                      })
+                    }
                     placeholder="Arg type"
                   />
                 </EditorField>
               )}
-
-              {isDateFunction(field.aggregation) && (
+              {showInput1 && (
                 <EditorField label="" width={20}>
                   <Input
                     value={field.functionArgValue || ''}
                     onChange={(e) => updateSelectField(index, { functionArgValue: e.currentTarget.value })}
-                    placeholder="Enter interval value"
+                    placeholder="Enter value"
+                  />
+                </EditorField>
+              )}
+              {showInput2 && (
+                <EditorField label="" width={20}>
+                  <Input
+                    value={field.functionArgValue2 || ''}
+                    onChange={(e) => updateSelectField(index, { functionArgValue2: e.currentTarget.value })}
+                    placeholder="Enter value"
                   />
                 </EditorField>
               )}

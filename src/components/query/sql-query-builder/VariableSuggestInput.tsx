@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Input } from '@grafana/ui';
-import { getTemplateSrv } from '@grafana/runtime';
+import { css } from '@emotion/css';
+import { getSelectableTemplateVariables } from 'variables';
 
 interface Props {
   value: string;
@@ -8,16 +9,41 @@ interface Props {
   placeholder?: string;
 }
 
-export const VariableSuggestInput: React.FC<Props> = ({ value, onChange, placeholder }) => {
+const wrapperClass = css`
+  position: relative;
+`;
+
+const suggestionListClass = css`
+  position: absolute;
+  z-index: 10;
+  background: var(--page-bg, #121212);
+  margin-top: 4px;
+  width: 100%;
+  max-height: 152px;
+  overflow-y: auto;
+  list-style: none;
+  padding: 0;
+  border: 1px solid var(--panel-border-color, #444);
+  border-radius: 4px;
+`;
+
+const suggestionItemClass = css`
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  &:hover {
+    background-color: var(--input-hover-bg, #2a2a2a);
+  }
+`;
+
+export const VariableSuggestInput: React.FC<Props> = ({ value = '', onChange, placeholder }) => {
   const [allVars, setAllVars] = useState<string[]>([]);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const vars = getTemplateSrv()
-      .getVariables()
-      .map((v) => v.name);
+    const vars = getSelectableTemplateVariables().map((v) => v.value.replace(/\$\{|\}/g, ''));
     setAllVars(vars);
   }, []);
 
@@ -40,8 +66,7 @@ export const VariableSuggestInput: React.FC<Props> = ({ value, onChange, placeho
     const matchStart = value.lastIndexOf('$');
     if (matchStart !== -1) {
       const before = value.substring(0, matchStart);
-      //   const after = value.substring(matchStart);
-      const replaced = before + '${' + suggestion + '}';
+      const replaced = `${before}\${${suggestion}}`;
       onChange(replaced);
       setShowSuggestions(false);
       setTimeout(() => inputRef.current?.focus(), 0);
@@ -49,7 +74,7 @@ export const VariableSuggestInput: React.FC<Props> = ({ value, onChange, placeho
   };
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div className={wrapperClass}>
       <Input
         ref={inputRef}
         value={value}
@@ -57,26 +82,10 @@ export const VariableSuggestInput: React.FC<Props> = ({ value, onChange, placeho
         placeholder={placeholder || 'Enter value or $variable'}
       />
       {showSuggestions && suggestions.length > 0 && (
-        <ul
-          style={{
-            position: 'absolute',
-            background: 'rgb(17, 18, 23)',
-            zIndex: 1000,
-            marginTop: 4,
-            listStyle: 'none',
-            padding: 0,
-            width: '100%',
-            maxHeight: 152,
-            overflowY: 'auto',
-          }}
-        >
-          {suggestions.map((suggestion) => (
-            <li
-              key={suggestion}
-              style={{ padding: 8, cursor: 'pointer' }}
-              onMouseDown={() => insertSuggestion(suggestion)} // mouseDown preserves input focus
-            >
-              ${suggestion}
+        <ul className={suggestionListClass}>
+          {suggestions.map((s) => (
+            <li key={s} className={suggestionItemClass} onMouseDown={() => insertSuggestion(s)}>
+              ${s}
             </li>
           ))}
         </ul>

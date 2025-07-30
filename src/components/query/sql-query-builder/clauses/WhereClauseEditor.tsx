@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import { Select, IconButton, Tooltip } from '@grafana/ui';
 import { EditorField, EditorFieldGroup, EditorRow } from '@grafana/plugin-ui';
-import { WhereCondition, whereOperators } from '../types';
-import { VariableSuggestInput } from '../VariableInputWithSuggestions';
+import { isFunctionOfType, WhereCondition, whereOperators } from '../types';
+import { VariableSuggestInput } from '../VariableSuggestInput';
 import { StyledLabel } from '../StyledLabel';
 
 interface WhereClauseEditorProps {
@@ -24,7 +24,11 @@ export const WhereClauseEditor: React.FC<WhereClauseEditorProps> = ({
   const handleUpdate = (index: number) => (key: keyof WhereCondition, value: any) => {
     const updated = [...whereConditions];
     updated[index] = { ...updated[index], [key]: value };
-    updated[index].operator === 'BETWEEN' ? (updated[index].operator2 = 'AND') : delete updated[index].operator2;
+    if (key === 'operator') {
+      updated[index].operator === 'BETWEEN' ? (updated[index].operator2 = 'AND') : delete updated[index].operator2;
+      updated[index].value = '';
+      updated[index].value2 = '';
+    }
     updateQuery({ whereConditions: updated });
   };
   const addWhereCondition = () => {
@@ -33,9 +37,12 @@ export const WhereClauseEditor: React.FC<WhereClauseEditorProps> = ({
     });
   };
   const removeWhereCondition = (index: number) => {
-    updateQuery({
-      whereConditions: whereConditions.filter((_, i) => i !== index),
-    });
+    const updatedConditions =
+      whereConditions.length === 1
+        ? [{ column: '', operator: '', value: '' }]
+        : whereConditions.filter((_, i) => i !== index);
+
+    updateQuery({ whereConditions: updatedConditions });
   };
 
   return (
@@ -60,9 +67,14 @@ export const WhereClauseEditor: React.FC<WhereClauseEditorProps> = ({
                 onChange={(o) => handleUpdate(index)('operator', o?.value || '')}
               />
             </EditorField>
-            <EditorField label="" width={30}>
-              <VariableSuggestInput value={condition.value} onChange={(val) => handleUpdate(index)('value', val)} />
-            </EditorField>
+            {!isFunctionOfType(condition.operator, 'val') && (
+              <>
+                <EditorField label="" width={30}>
+                  <VariableSuggestInput value={condition.value} onChange={(val) => handleUpdate(index)('value', val)} />
+                </EditorField>
+              </>
+            )}
+
             {/* For BETWEEN Operator */}
             {condition.operator === 'BETWEEN' && (
               <>
@@ -98,15 +110,11 @@ export const WhereClauseEditor: React.FC<WhereClauseEditorProps> = ({
                   </Tooltip>
                 )}
 
-                {whereConditions.length > 1 && (
-                  <Tooltip content="Remove condition">
-                    <IconButton
-                      name="minus"
-                      onClick={() => removeWhereCondition(index)}
-                      aria-label="Remove condition"
-                    />
-                  </Tooltip>
-                )}
+                {/* {whereConditions.length > 1 && ( */}
+                <Tooltip content="Remove condition">
+                  <IconButton name="minus" onClick={() => removeWhereCondition(index)} aria-label="Remove condition" />
+                </Tooltip>
+                {/* )} */}
               </div>
             </EditorField>
           </EditorFieldGroup>
