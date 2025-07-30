@@ -7,11 +7,11 @@ import { tooltipMessages } from './types';
 interface StyledLabelProps {
   text: string;
   width?: number;
-  color?: string; // e.g. "#6e9fff" or tailwind class like "text-green-500"
+  color?: string; // e.g. "#6e9fff" or Tailwind class like "text-green-500"
   tooltip?: boolean;
   bold?: boolean;
   fontSize?: string; // e.g. "14px"
-  className?: string; // optional className override
+  className?: string;
 }
 
 export const StyledLabel: React.FC<StyledLabelProps> = ({
@@ -23,26 +23,21 @@ export const StyledLabel: React.FC<StyledLabelProps> = ({
   fontSize,
   className,
 }) => {
+  const isTailwindColor = color.startsWith('text-');
+
   const style: React.CSSProperties = {
-    color: color.startsWith('text-') ? undefined : color,
+    color: isTailwindColor ? undefined : color,
     fontWeight: bold ? 'bold' : undefined,
     fontSize,
   };
 
-  const combinedClassName = clsx(
-    color.startsWith('text-') ? color : undefined, // allow Tailwind color if passed
-    bold && 'font-bold',
-    className
-  );
+  const combinedClassName = clsx(isTailwindColor && color, bold && 'font-bold', className);
+
+  const tooltipText = tooltip ? tooltipMessages[text] : undefined;
 
   return (
     <EditorField label="" width={width}>
-      <InlineLabel
-        width="auto"
-        style={style}
-        {...(tooltip ? { tooltip: tooltipMessages[text] } : {})}
-        className={combinedClassName}
-      >
+      <InlineLabel width="auto" style={style} tooltip={tooltipText} className={combinedClassName}>
         {text}
       </InlineLabel>
     </EditorField>
