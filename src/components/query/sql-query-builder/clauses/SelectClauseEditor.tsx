@@ -42,7 +42,7 @@ export const SelectClauseEditor: React.FC<SelectClauseEditorProps> = ({
 
   const shouldShowInput2 = (agg: string) => isFunctionOfType(agg, 'str');
 
-  const getFunctionArgs = (agg: string): { label: string; value: string }[] => {
+  const getFunctionArgs = (agg: string): Array<{ label: string; value: string }> => {
     if (isFunctionOfType(agg, 'date')) {
       return FUNCTION_ARGS.DATE.map((arg) => ({ label: arg, value: arg }));
     }
@@ -102,7 +102,7 @@ export const SelectClauseEditor: React.FC<SelectClauseEditorProps> = ({
                         functionArg: (v as any)?.value || '',
                       })
                     }
-                    placeholder="Arg type"
+                    placeholder={isFunctionOfType(field.aggregation, 'concat') ? 'Select column' : 'Arg type'}
                   />
                 </EditorField>
               )}

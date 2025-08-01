@@ -47,7 +47,7 @@ describe('HavingClauseEditor', () => {
     expect(screen.getByText('Select column...')).toBeInTheDocument();
     const operatorDropdown = screen.getByText('=');
     expect(operatorDropdown).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Enter value or $variable')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Enter value')).toBeInTheDocument();
     expect(screen.getByLabelText('Add condition')).toBeInTheDocument();
     expect(screen.getByLabelText('Remove condition')).toBeInTheDocument();
   });

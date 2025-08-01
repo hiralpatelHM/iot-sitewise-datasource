@@ -132,7 +132,7 @@ describe('SelectClauseEditor', () => {
     await userEvent.click(argTypeSelect);
     const option = screen.getByText('asset_name');
     await userEvent.click(option);
-    expect(screen.getByText('assetId')).toBeInTheDocument();
+    expect(screen.getByText('asset_id')).toBeInTheDocument();
   });
 
   it('does not remove last field', async () => {

@@ -1,8 +1,7 @@
 import React from 'react';
-import { Select, IconButton, Tooltip } from '@grafana/ui';
+import { Select, IconButton, Tooltip, Input } from '@grafana/ui';
 import { EditorField, EditorFieldGroup, EditorRow } from '@grafana/plugin-ui';
 import { HavingCondition } from '../types';
-import { VariableSuggestInput } from '../VariableSuggestInput';
 import { StyledLabel } from '../StyledLabel';
 
 interface HavingClauseEditorProps {
@@ -103,9 +102,13 @@ export const HavingClauseEditor: React.FC<HavingClauseEditorProps> = ({
               />
             </EditorField>
 
-            {/* Value input (supports template variables via VariableSuggestInput) */}
+            {/* Value input */}
             <EditorField label="" width={25}>
-              <VariableSuggestInput value={cond.value} onChange={(val) => updateCondition(index, 'value', val)} />
+              <Input
+                value={cond.value}
+                onChange={(e) => updateCondition(index, 'value', e.currentTarget.value)}
+                placeholder="Enter value"
+              />
             </EditorField>
 
             {/* Logical operator (AND/OR) dropdown shown for all but last condition */}
