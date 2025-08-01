@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Input } from '@grafana/ui';
-import { css } from '@emotion/css';
 import { getSelectableTemplateVariables } from 'variables';
 
 interface Props {
@@ -9,44 +8,58 @@ interface Props {
   placeholder?: string;
 }
 
-const wrapperClass = css`
-  position: relative;
-`;
+// Wrapper style for positioning suggestion list relative to input
+const wrapperStyle: React.CSSProperties = {
+  position: 'relative',
+};
 
-const suggestionListClass = css`
-  position: absolute;
-  z-index: 10;
-  background: var(--page-bg, #121212);
-  margin-top: 4px;
-  width: 100%;
-  max-height: 152px;
-  overflow-y: auto;
-  list-style: none;
-  padding: 0;
-  border: 1px solid var(--panel-border-color, #444);
-  border-radius: 4px;
-`;
+// Styles for the suggestion dropdown list
+const suggestionListStyle: React.CSSProperties = {
+  position: 'absolute',
+  zIndex: 10,
+  background: 'var(--page-bg, #121212)',
+  marginTop: 4,
+  width: '100%',
+  maxHeight: 152,
+  overflowY: 'auto',
+  listStyle: 'none',
+  padding: 0,
+  border: '1px solid var(--panel-border-color, #444)',
+  borderRadius: 4,
+};
 
-const suggestionItemClass = css`
-  padding: 8px 12px;
-  cursor: pointer;
-  font-size: 13px;
-  &:hover {
-    background-color: var(--input-hover-bg, #2a2a2a);
-  }
-`;
+// Style for each item in the suggestion list
+const suggestionItemStyle: React.CSSProperties = {
+  padding: '8px 12px',
+  cursor: 'pointer',
+  fontSize: 13,
+};
+
+const hoverStyle: React.CSSProperties = {
+  backgroundColor: 'var(--input-hover-bg, #2a2a2a)',
+};
 
 export const VariableSuggestInput: React.FC<Props> = ({ value = '', onChange, placeholder }) => {
-  const [allVars, setAllVars] = useState<string[]>([]);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [allVars, setAllVars] = useState<string[]>([]); // Holds all available template variables
+  const [suggestions, setSuggestions] = useState<string[]>([]); // Filtered suggestions based on input
+  const [showSuggestions, setShowSuggestions] = useState(false); // Toggle for showing suggestion list
+  const inputRef = useRef<HTMLInputElement>(null); // Ref to focus back after selecting a suggestion
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null); // Track hover for inline style
 
+  /**
+   * On component mount, fetch all selectable template variable names
+   * and clean them by removing `${}` wrapping.
+   */
   useEffect(() => {
     const vars = getSelectableTemplateVariables().map((v) => v.value.replace(/\$\{|\}/g, ''));
     setAllVars(vars);
   }, []);
 
+  /**
+   * Handles input changes and updates suggestions list if user types `$`
+   *
+   * @param e - The input change event
+   */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputVal = e.currentTarget.value;
     onChange(inputVal);
@@ -62,6 +75,12 @@ export const VariableSuggestInput: React.FC<Props> = ({ value = '', onChange, pl
     }
   };
 
+  /**
+   * Inserts selected suggestion into the input field at the last `$` position,
+   * wraps the variable in `${}` format, and refocuses the input.
+   *
+   * @param suggestion - The selected variable name
+   */
   const insertSuggestion = (suggestion: string) => {
     const matchStart = value.lastIndexOf('$');
     if (matchStart !== -1) {
@@ -74,17 +93,27 @@ export const VariableSuggestInput: React.FC<Props> = ({ value = '', onChange, pl
   };
 
   return (
-    <div className={wrapperClass}>
+    <div style={wrapperStyle}>
       <Input
         ref={inputRef}
         value={value}
         onChange={handleChange}
         placeholder={placeholder || 'Enter value or $variable'}
       />
+      {/* Render suggestion list only when needed */}
       {showSuggestions && suggestions.length > 0 && (
-        <ul className={suggestionListClass}>
+        <ul style={suggestionListStyle}>
           {suggestions.map((s) => (
-            <li key={s} className={suggestionItemClass} onMouseDown={() => insertSuggestion(s)}>
+            <li
+              key={s}
+              style={{
+                ...suggestionItemStyle,
+                ...(hoveredItem === s ? hoverStyle : {}),
+              }}
+              onMouseDown={() => insertSuggestion(s)}
+              onMouseEnter={() => setHoveredItem(s)}
+              onMouseLeave={() => setHoveredItem(null)}
+            >
               ${s}
             </li>
           ))}

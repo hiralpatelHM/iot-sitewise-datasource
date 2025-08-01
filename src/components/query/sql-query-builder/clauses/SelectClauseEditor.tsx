@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Select, Input, IconButton, Tooltip } from '@grafana/ui';
 import { EditorField, EditorFieldGroup, EditorRow } from '@grafana/plugin-ui';
 import { allFunctions, FUNCTION_ARGS, isFunctionOfType, SelectField } from '../types';
@@ -15,6 +15,11 @@ export const SelectClauseEditor: React.FC<SelectClauseEditorProps> = ({
   updateQuery,
   availableProperties,
 }) => {
+  const columnOptions = useMemo(
+    () => availableProperties.map((prop) => ({ label: prop.name, value: prop.id })),
+    [availableProperties]
+  );
+
   const addSelectField = () => {
     const newFields = [...selectFields, { column: '', aggregation: '', alias: '' }];
     updateQuery({ selectFields: newFields });
@@ -37,15 +42,15 @@ export const SelectClauseEditor: React.FC<SelectClauseEditorProps> = ({
 
   const shouldShowInput2 = (agg: string) => isFunctionOfType(agg, 'str');
 
-  const getFunctionArgs = (agg: string): string[] => {
+  const getFunctionArgs = (agg: string): { label: string; value: string }[] => {
     if (isFunctionOfType(agg, 'date')) {
-      return FUNCTION_ARGS.DATE;
+      return FUNCTION_ARGS.DATE.map((arg) => ({ label: arg, value: arg }));
     }
     if (isFunctionOfType(agg, 'cast')) {
-      return FUNCTION_ARGS.CAST;
+      return FUNCTION_ARGS.CAST.map((arg) => ({ label: arg, value: arg }));
     }
     if (isFunctionOfType(agg, 'concat')) {
-      return availableProperties.map((p) => p.name);
+      return columnOptions;
     }
     return [];
   };
@@ -63,7 +68,7 @@ export const SelectClauseEditor: React.FC<SelectClauseEditorProps> = ({
               <StyledLabel text={index === 0 ? 'SELECT' : ''} width={15} tooltip={index === 0} />
               <EditorField label="" width={30}>
                 <Select
-                  options={availableProperties.map((prop) => ({ label: prop.name, value: prop.id }))}
+                  options={columnOptions}
                   value={field.column ? { label: field.column, value: field.column } : null}
                   onChange={(option) => updateSelectField(index, { column: option?.value || '' })}
                   placeholder="Select column..."
@@ -90,7 +95,7 @@ export const SelectClauseEditor: React.FC<SelectClauseEditorProps> = ({
               {functionArgs.length > 0 && (
                 <EditorField label="" width={20}>
                   <Select
-                    options={functionArgs.map((a) => ({ label: a, value: a }))}
+                    options={functionArgs}
                     value={field.functionArg ? { label: field.functionArg, value: field.functionArg } : null}
                     onChange={(v) =>
                       updateSelectField(index, {

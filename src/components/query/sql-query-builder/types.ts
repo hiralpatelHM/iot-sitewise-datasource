@@ -43,7 +43,6 @@ export interface SitewiseQueryState {
   selectedAssets: string[];
   selectFields: SelectField[];
   whereConditions: WhereCondition[];
-  groupByTime?: string;
   groupByTags: string[];
   orderByFields: OrderByField[];
   havingConditions: HavingCondition[];
@@ -57,16 +56,14 @@ export const defaultSitewiseQueryState: SitewiseQueryState = {
   selectedAssets: [],
   selectFields: [{ column: '', aggregation: '', alias: '' }],
   whereConditions: [{ column: '', operator: '', value: '', logicalOperator: 'AND' }],
-  groupByTime: '',
   groupByTags: [],
   orderByFields: [{ column: '', direction: 'ASC' }],
   havingConditions: [{ aggregation: 'COUNT', column: '', operator: '=', value: '', logicalOperator: 'AND' }],
-  limit: 1000,
+  limit: 100,
   timezone: 'UTC',
   rawSQL: '',
 };
 
-// AssetModels and Assets
 export interface AssetProperty {
   id: string;
   name: string;
@@ -78,14 +75,6 @@ export interface AssetModel {
   id: string;
   name: string;
   properties: AssetProperty[];
-}
-
-export interface Asset {
-  id: string;
-  name: string;
-  modelId: string;
-  hierarchy: string[];
-  tags: Record<string, string>;
 }
 
 export const mockAssetModels: AssetModel[] = [
@@ -170,14 +159,12 @@ export const mockAssetModels: AssetModel[] = [
   },
 ];
 
-// fields
 export const timeIntervalProperty: AssetProperty = {
   id: 'timeInterval',
   name: 'Time Interval',
   dataType: 'STRING',
 };
 
-// queryOptions
 export const whereOperators = [
   { label: '>', value: '>' },
   { label: '<', value: '<' },
@@ -239,6 +226,21 @@ export const allFunctions: Array<{
   { group: 'Null', label: 'COALESCE', value: 'COALESCE' },
 ];
 
+export const FUNCTION_ARGS = {
+  DATE: ['DAY', 'MONTH', 'YEAR'],
+  CAST: ['BOOLEAN', 'INTEGER', 'INT', 'TIMESTAMP'],
+};
+
+export const tooltipMessages: Record<string, string> = {
+  FROM: 'Select the view to query data from.',
+  SELECT: 'Choose the fields or columns you want to retrieve in the result.',
+  WHERE: 'Filter rows based on specific conditions.',
+  'GROUP BY': 'Select one or more columns to group your query by',
+  'ORDER BY': 'Sort the result set by one or more columns.',
+  HAVING: 'Filter groups based on aggregate conditions.',
+  LIMIT: 'Restrict the number of records returned by the query.',
+};
+
 export const FUNCTION_TYPES = {
   date: ['DATE_ADD', 'DATE_SUB', 'TIMESTAMP_ADD', 'TIMESTAMP_SUB'],
   math: ['POWER', 'ROUND', 'COALESCE'],
@@ -261,20 +263,4 @@ export const isFunctionOfType = (fn?: string, ...types: FunctionType[]): fn is F
     const functions = FUNCTION_TYPES[type] as readonly string[];
     return functions.includes(fn);
   });
-};
-
-export const FUNCTION_ARGS = {
-  DATE: ['DAY', 'MONTH', 'YEAR'],
-  CAST: ['BOOLEAN', 'INTEGER', 'INT', 'TIMESTAMP'],
-};
-
-// tooltipMessages.ts
-export const tooltipMessages: Record<string, string> = {
-  FROM: 'Select the view to query data from.',
-  SELECT: 'Choose the fields or columns you want to retrieve in the result.',
-  WHERE: 'Filter rows based on specific conditions.',
-  'GROUP BY': 'Select one or more columns to group your query by',
-  'ORDER BY': 'Sort the result set by one or more columns.',
-  HAVING: 'Filter groups based on aggregate conditions.',
-  LIMIT: 'Restrict the number of records returned by the query.',
 };

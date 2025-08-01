@@ -8,14 +8,11 @@ const assetModels = [
   { id: 'model-2', name: 'Asset Model 2' },
 ];
 
-// 🧪 Setup for each test
 const setup = (selectedModelId = '', customModels = assetModels) => {
   const mockUpdateQuery = jest.fn();
-
   render(
     <FromClauseEditor assetModels={customModels} selectedModelId={selectedModelId} updateQuery={mockUpdateQuery} />
   );
-
   return { mockUpdateQuery };
 };
 
@@ -29,7 +26,6 @@ describe('FromClauseEditor', () => {
     const { mockUpdateQuery } = setup();
     const dropdown = screen.getByText('Select view...');
     fireEvent.mouseDown(dropdown);
-
     const option = screen.queryByText('Asset Model 1');
     if (option) {
       fireEvent.click(option);
@@ -48,7 +44,6 @@ describe('FromClauseEditor', () => {
     const { mockUpdateQuery } = setup('model-1');
     const dropdown = screen.getByText('Asset Model 1');
     await userEvent.click(dropdown);
-
     const option = screen.getByText('Asset Model 2');
     await userEvent.click(option);
 
@@ -97,6 +92,7 @@ describe('FromClauseEditor', () => {
     setup('', []);
     const dropdown = screen.getByText('Select view...');
     await userEvent.click(dropdown);
+
     expect(screen.queryByRole('option')).not.toBeInTheDocument();
   });
 });

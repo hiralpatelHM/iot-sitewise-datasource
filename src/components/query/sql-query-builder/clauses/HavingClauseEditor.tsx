@@ -13,6 +13,10 @@ interface HavingClauseEditorProps {
 
 const aggregationOptions = ['COUNT', 'SUM', 'AVG', 'MAX', 'MIN'].map((val) => ({ label: val, value: val }));
 
+/**
+ * UI editor for building SQL-style `HAVING` clauses.
+ * Supports aggregation selection, column targeting, logical operators, and variable-based value inputs.
+ */
 export const HavingClauseEditor: React.FC<HavingClauseEditorProps> = ({
   havingConditions,
   updateQuery,
@@ -21,12 +25,23 @@ export const HavingClauseEditor: React.FC<HavingClauseEditorProps> = ({
   const columnOptions = availableProperties.map((prop) => ({ label: prop.name, value: prop.id }));
   const operatorOptions = ['=', '!=', '>', '<', '>=', '<='].map((op) => ({ label: op, value: op }));
 
+  /**
+   * Updates a specific field in one of the `havingConditions`.
+   *
+   * @param index - Index of the condition being edited
+   * @param key - Key in the condition object to update
+   * @param value - New value for the key
+   */
   const updateCondition = (index: number, key: keyof HavingCondition, value: any) => {
     const updated = [...havingConditions];
     updated[index] = { ...updated[index], [key]: value };
     updateQuery({ havingConditions: updated });
   };
 
+  /**
+   * Adds a new HAVING condition row with default values.
+   * Appends to the current `havingConditions` array.
+   */
   const addCondition = () => {
     updateQuery({
       havingConditions: [
@@ -36,9 +51,19 @@ export const HavingClauseEditor: React.FC<HavingClauseEditorProps> = ({
     });
   };
 
+  /**
+   * Removes a condition at the specified index.
+   * If there's only one condition left, it resets it instead of removing.
+   *
+   * @param index - Index of the condition to remove
+   */
   const removeCondition = (index: number) => {
+    const updatedConditions =
+      havingConditions.length === 1
+        ? [{ aggregation: 'COUNT', column: '', operator: '=', value: '' }]
+        : havingConditions.filter((_, i) => i !== index);
     updateQuery({
-      havingConditions: havingConditions.filter((_, i) => i !== index),
+      havingConditions: updatedConditions as HavingCondition[],
     });
   };
 
@@ -47,7 +72,10 @@ export const HavingClauseEditor: React.FC<HavingClauseEditorProps> = ({
       {havingConditions.map((cond, index) => (
         <EditorRow key={index}>
           <EditorFieldGroup>
+            {/* Show the 'HAVING' label */}
             <StyledLabel text={index === 0 ? 'HAVING' : ''} width={15} tooltip={index === 0} />
+
+            {/* Aggregation function dropdown */}
             <EditorField label="" width={10}>
               <Select
                 options={aggregationOptions}
@@ -56,6 +84,7 @@ export const HavingClauseEditor: React.FC<HavingClauseEditorProps> = ({
               />
             </EditorField>
 
+            {/* Column selection dropdown */}
             <EditorField label="" width={25}>
               <Select
                 options={columnOptions}
@@ -65,6 +94,7 @@ export const HavingClauseEditor: React.FC<HavingClauseEditorProps> = ({
               />
             </EditorField>
 
+            {/* Operator dropdown (e.g., =, !=, >, <) */}
             <EditorField label="" width={5}>
               <Select
                 options={operatorOptions}
@@ -73,10 +103,12 @@ export const HavingClauseEditor: React.FC<HavingClauseEditorProps> = ({
               />
             </EditorField>
 
+            {/* Value input (supports template variables via VariableSuggestInput) */}
             <EditorField label="" width={25}>
               <VariableSuggestInput value={cond.value} onChange={(val) => updateCondition(index, 'value', val)} />
             </EditorField>
 
+            {/* Logical operator (AND/OR) dropdown shown for all but last condition */}
             {index < havingConditions.length - 1 && (
               <EditorField label="" width={10}>
                 <Select
@@ -90,6 +122,7 @@ export const HavingClauseEditor: React.FC<HavingClauseEditorProps> = ({
               </EditorField>
             )}
 
+            {/* Action buttons to add or remove condition */}
             <EditorField label="" width={10}>
               <div>
                 {index === havingConditions.length - 1 && (
@@ -97,11 +130,9 @@ export const HavingClauseEditor: React.FC<HavingClauseEditorProps> = ({
                     <IconButton name="plus" onClick={addCondition} aria-label="Add condition" />
                   </Tooltip>
                 )}
-                {havingConditions.length > 1 && (
-                  <Tooltip content="Remove condition">
-                    <IconButton name="minus" onClick={() => removeCondition(index)} aria-label="Remove condition" />
-                  </Tooltip>
-                )}
+                <Tooltip content="Remove condition">
+                  <IconButton name="minus" onClick={() => removeCondition(index)} aria-label="Remove condition" />
+                </Tooltip>
               </div>
             </EditorField>
           </EditorFieldGroup>

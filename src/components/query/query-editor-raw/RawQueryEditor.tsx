@@ -1,10 +1,9 @@
 import React, { useCallback, useState } from 'react';
-import { CodeEditor, IconButton } from '@grafana/ui';
+import { CodeEditor, HorizontalGroup, IconButton, Space } from '@grafana/ui';
 import { QueryEditorProps } from '@grafana/data';
 import { DataSource } from 'SitewiseDataSource';
 import { SitewiseQuery, SitewiseOptions } from 'types';
 import { SitewiseCompletionProvider } from 'language/autoComplete';
-import { css } from '@emotion/css';
 import { SqlQueryBuilder } from '../sql-query-builder/SqlQueryBuilder';
 import { defaultSitewiseQueryState, SitewiseQueryState } from '../sql-query-builder/types';
 
@@ -31,24 +30,18 @@ export function RawQueryEditor(props: Props) {
   );
 
   return (
-    <div>
-      {/* Toggle Button */}
-      <div
-        className={css`
-          display: flex;
-          justify-content: flex-end;
-          align-items: center;
-          margin-bottom: 8px;
-        `}
-      >
+    <>
+      <HorizontalGroup justify="space-between" align="center">
+        <div style={{ flex: 1 }} />
         <IconButton
           name="pen"
           tooltip={mode === 'builder' ? 'Switch to Builder' : 'Switch to Raw Editor'}
           onClick={toggleMode}
         />
-      </div>
+      </HorizontalGroup>
 
-      {/* Conditional rendering of editors */}
+      <Space v={1} />
+
       {mode === 'raw' ? (
         <CodeEditor
           language="sql"
@@ -66,10 +59,8 @@ export function RawQueryEditor(props: Props) {
           height={'200px'}
         />
       ) : (
-        <div>
-          <SqlQueryBuilder builderState={builderState} onChange={handleQueryChange} />
-        </div>
+        <SqlQueryBuilder builderState={builderState} onChange={handleQueryChange} />
       )}
-    </div>
+    </>
   );
 }

@@ -13,7 +13,6 @@ jest.mock('../utils/queryGenerator', () => ({
   generateQueryPreview: jest.fn(),
 }));
 
-// Constants
 const mockPreview = 'SELECT column FROM asset;';
 const mockErrors = ['Missing WHERE condition'];
 
@@ -23,7 +22,6 @@ const mockQuery: SitewiseQueryState = {
   selectedAssets: ['asset-1'],
   selectFields: [{ column: 'asset_name', aggregation: '', alias: 'name' }],
   whereConditions: [{ column: 'asset_id', operator: '=', value: '123' }],
-  groupByTime: '1m',
   groupByTags: ['department'],
   orderByFields: [{ column: 'asset_name', direction: 'ASC' }],
   limit: 500,
@@ -43,9 +41,8 @@ describe('useSQLQueryState', () => {
 
     const { result } = renderHook(() => useSQLQueryState({ initialQuery: mockQuery, onChange }));
 
-    expect(result.current.queryState).toEqual(mockQuery);
-
     await waitFor(() => {
+      expect(result.current.queryState).toEqual(mockQuery);
       expect(result.current.preview).toBe(mockPreview);
       expect(result.current.validationErrors).toEqual(mockErrors);
     });

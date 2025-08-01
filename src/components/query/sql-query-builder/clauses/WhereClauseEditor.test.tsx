@@ -176,4 +176,39 @@ describe('WhereClauseEditor', () => {
       ],
     });
   });
+
+  it('does not show VariableSuggestInput for IS NULL operator', () => {
+    setup([{ column: 'asset_id', operator: 'IS NULL', value: '123' }]);
+
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+  });
+
+  it('shows VariableSuggestInput for value-based operators (like =)', () => {
+    setup([{ column: 'asset_id', operator: '=', value: '123' }]);
+
+    const input = screen.getByRole('textbox');
+    expect(input).toBeInTheDocument();
+  });
+
+  it('does not show logicalOperator Select if only one condition', () => {
+    const updateQuery = jest.fn();
+    const whereConditions = [{ column: 'asset_id', operator: '=', value: '123' }];
+    setup(whereConditions, updateQuery);
+
+    expect(screen.queryByText('AND')).not.toBeInTheDocument();
+    expect(screen.queryByText('OR')).not.toBeInTheDocument();
+  });
+
+  it('shows logicalOperator Select when there are multiple conditions', () => {
+    const updateQuery = jest.fn();
+    const whereConditions: WhereCondition[] = [
+      { column: 'asset_id', operator: '=', value: '123', logicalOperator: 'AND' },
+      { column: 'asset_name', operator: '=', value: 'model', logicalOperator: 'OR' },
+    ];
+    setup(whereConditions, updateQuery);
+
+    expect(screen.getByText('AND')).toBeInTheDocument();
+    const selectDropdown = screen.getAllByRole('combobox');
+    expect(selectDropdown.length).toBeGreaterThan(0);
+  });
 });

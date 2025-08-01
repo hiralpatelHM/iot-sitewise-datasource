@@ -7,12 +7,24 @@ import { tooltipMessages } from './types';
 interface StyledLabelProps {
   text: string;
   width?: number;
-  color?: string; // e.g. "#6e9fff" or Tailwind class like "text-green-500"
+  color?: string;
   tooltip?: boolean;
   bold?: boolean;
-  fontSize?: string; // e.g. "14px"
+  fontSize?: string;
   className?: string;
 }
+
+/**
+ * StyledLabel
+ *
+ * A reusable label component for Grafana plugin editors that supports:
+ * - Custom font size and color
+ * - Optional bold styling
+ * - Tailwind text color classes
+ * - Optional tooltip integration
+ *
+ * Wrapped inside `EditorField` to align with Grafana’s plugin editor layout.
+ */
 
 export const StyledLabel: React.FC<StyledLabelProps> = ({
   text,

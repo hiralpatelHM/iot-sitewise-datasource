@@ -86,7 +86,6 @@ describe('generateQueryPreview', () => {
       selectFields: [{ column: 'prop-1', aggregation: '', alias: '' }],
       whereConditions: [],
       groupByTags: ['prop-1'],
-      groupByTime: '1h',
       havingConditions: [],
       orderByFields: [{ column: 'prop-1', direction: 'DESC' }],
       timezone: 'Asia/Tokyo',
@@ -94,7 +93,7 @@ describe('generateQueryPreview', () => {
     };
 
     const preview = await generateQueryPreview(query);
-    expect(preview).toContain('GROUP BY prop-1, time(1h)');
+    expect(preview).toContain('GROUP BY prop-1');
     expect(preview).toContain('ORDER BY prop-1 DESC');
   });
 
@@ -201,15 +200,15 @@ describe('generateQueryPreview', () => {
       whereConditions: [],
       groupByTags: ['prop-1'],
       havingConditions: [
-        { aggregation: 'MAX', column: '', operator: '=', value: '10', logicalOperator: 'AND' }, // invalid: empty column
+        { aggregation: 'MAX', column: '', operator: '=', value: '10', logicalOperator: 'AND' },
         {
           aggregation: '' as unknown as AggregationFunction,
           column: 'prop-1',
           operator: '=',
           value: '20',
           logicalOperator: 'AND',
-        }, // invalid: empty aggregation
-        { aggregation: 'MAX', column: 'prop-1', operator: '=', value: '20', logicalOperator: 'AND' }, // valid
+        },
+        { aggregation: 'MAX', column: 'prop-1', operator: '=', value: '20', logicalOperator: 'AND' },
       ],
       orderByFields: [],
       timezone: 'Asia/Tokyo',

@@ -34,18 +34,9 @@ export const validateQuery = (state: SitewiseQueryState): string[] => {
   }
 
   // GROUP BY clause validation (optional)
-  if (state.groupByTime && !/^\d+[smhd]$/.test(state.groupByTime)) {
-    errors.push('Group by time must be a valid duration (e.g., 1m, 10s, 1h, 1d).');
-  }
-
   if (state.groupByTags?.some((tag) => !tag || tag.trim() === '')) {
     errors.push('Group by tags must not contain empty values.');
   }
-
-  // // ORDER BY clause validation (optional)
-  // if (state.orderByFields?.some((field) => !field.column)) {
-  //   errors.push('Each ORDER BY field must include a column and a valid direction (ASC or DESC).');
-  // }
 
   return errors;
 };

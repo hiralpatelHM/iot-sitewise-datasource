@@ -2,7 +2,6 @@ import React, { useMemo, useCallback } from 'react';
 import { EditorField, EditorFieldGroup, EditorRow } from '@grafana/plugin-ui';
 import { Select, ActionMeta } from '@grafana/ui';
 import { SelectableValue } from '@grafana/data';
-import { timeIntervals } from '../types';
 import { StyledLabel } from '../StyledLabel';
 
 interface PropertyOption {
@@ -13,17 +12,22 @@ interface PropertyOption {
 interface GroupByClauseEditorProps {
   availablePropertiesForGrouping: PropertyOption[];
   groupByTags: string[];
-  groupByTime: string;
-  updateQuery: (fields: Partial<{ groupByTags: string[]; groupByTime: string }>) => void;
+  updateQuery: (fields: Partial<{ groupByTags: string[] }>) => void;
 }
 
+/**
+ *
+ * A React component that renders a multi-select dropdown to choose one or more columns
+ * for the SQL `GROUP BY` clause. Used in a sql query builder.
+ */
 export const GroupByClauseEditor: React.FC<GroupByClauseEditorProps> = ({
   availablePropertiesForGrouping,
   groupByTags,
-  groupByTime,
   updateQuery,
 }) => {
-  // Memoized list of available GROUP BY columns
+  /**
+   * Memoized transformation of available columns
+   */
   const groupByOptions: Array<SelectableValue<string>> = useMemo(
     () =>
       availablePropertiesForGrouping.map(({ id, name }) => ({
@@ -33,7 +37,9 @@ export const GroupByClauseEditor: React.FC<GroupByClauseEditorProps> = ({
     [availablePropertiesForGrouping]
   );
 
-  // Memoized currently selected GROUP BY columns
+  /**
+   * Memoized selection of currently selected columns for GROUP BY options
+   */
   const selectedGroupByOptions: Array<SelectableValue<string>> = useMemo(
     () =>
       groupByTags.map((tag) => {
@@ -42,33 +48,20 @@ export const GroupByClauseEditor: React.FC<GroupByClauseEditorProps> = ({
     [groupByTags, groupByOptions]
   );
 
+  /**
+   * Handler for when user updates selected GROUP BY columns.
+   * Converts selected options to an array of string IDs and
+   * calls the updateQuery callback with new state.
+   *
+   * @param options - selected options from the <Select> dropdown
+   */
   const handleGroupByTagsChange = useCallback(
     (options: SelectableValue<string> | Array<SelectableValue<string>>, _meta?: ActionMeta) => {
-      let tags: string[] = [];
-
-      if (Array.isArray(options)) {
-        tags = options.map((opt) => opt.value).filter(Boolean) as string[];
-      } else if (options?.value) {
-        tags = [options.value];
-      }
-
-      const nextState: Partial<{ groupByTags: string[]; groupByTime: string }> = {
+      const tags: string[] = options.map((opt: any) => opt.value).filter(Boolean) as string[];
+      const nextState: Partial<{ groupByTags: string[] }> = {
         groupByTags: tags,
       };
-
-      if (!tags.includes('timeInterval')) {
-        nextState.groupByTime = '';
-      }
-
       updateQuery(nextState);
-    },
-    [updateQuery]
-  );
-
-  // Handle changes to GROUP BY timeInterval (single-select)
-  const handleGroupByTimeChange = useCallback(
-    (option: SelectableValue<string> | null, _meta?: ActionMeta) => {
-      updateQuery({ groupByTime: option?.value || '' });
     },
     [updateQuery]
   );
@@ -76,7 +69,10 @@ export const GroupByClauseEditor: React.FC<GroupByClauseEditorProps> = ({
   return (
     <EditorRow>
       <EditorFieldGroup>
+        {/* Custom styled label for GROUP BY */}
         <StyledLabel text={'GROUP BY'} width={15} tooltip />
+
+        {/* Choose GROUP BY columns */}
         <EditorField label="" width={30}>
           <Select
             options={groupByOptions}
@@ -86,22 +82,6 @@ export const GroupByClauseEditor: React.FC<GroupByClauseEditorProps> = ({
             placeholder="Select column(s)..."
           />
         </EditorField>
-
-        {groupByTags.includes('timeInterval') && (
-          <EditorField label="" width={15}>
-            <Select
-              options={timeIntervals}
-              value={
-                timeIntervals.find((ti) => ti.value === groupByTime) || {
-                  label: '1s',
-                  value: '1s',
-                }
-              }
-              onChange={handleGroupByTimeChange}
-              placeholder="Select interval..."
-            />
-          </EditorField>
-        )}
       </EditorFieldGroup>
     </EditorRow>
   );

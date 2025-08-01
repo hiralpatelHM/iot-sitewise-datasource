@@ -1,4 +1,4 @@
-import React from 'react'; // No need for useEffect, useRef, useState directly in component
+import React from 'react';
 import { EditorRows, EditorRow } from '@grafana/plugin-ui';
 import { SqlQueryBuilderProps, mockAssetModels } from './types';
 import { FromClauseEditor } from './clauses/FromClauseEditor';
@@ -11,6 +11,15 @@ import { QueryPreviewDisplay } from './QueryPreviewDisplay';
 import { useSQLQueryState } from './hooks/useSQLQueryState';
 import { HavingClauseEditor } from './clauses/HavingClauseEditor';
 
+/**
+ * SqlQueryBuilder
+ *
+ * A SQL query builder component used in the Grafana plugin for constructing queries interactively.
+ * It provides editor sections for common SQL clauses such as FROM, SELECT, WHERE, GROUP BY, HAVING,ORDER BY etc.
+ *
+ * - @param builderState - Initial query state passed from parent.
+ * - @param onChange - Callback to notify parent of query changes.
+ */
 export function SqlQueryBuilder({ builderState, onChange }: SqlQueryBuilderProps) {
   const { queryState, preview, validationErrors, updateQuery, availableProperties, availablePropertiesForGrouping } =
     useSQLQueryState({
@@ -18,46 +27,53 @@ export function SqlQueryBuilder({ builderState, onChange }: SqlQueryBuilderProps
       onChange: onChange,
     });
 
+  // HAVING clause is only shown when the query includes a GROUP BY
   const isHavingVisible = queryState.groupByTags.length > 0;
 
   return (
     <div className="gf-form-group">
       <EditorRows>
         <EditorRow>
-          {/* FROM Section */}
+          {/* FROM Clause Editor
+              - Allows user to select an asset model (table equivalent)
+              - Also handles LIMIT clause configuration */}
           <FromClauseEditor
             assetModels={mockAssetModels}
             selectedModelId={queryState.selectedAssetModel || ''}
             updateQuery={updateQuery}
           />
 
-          {/* Limit Clause */}
+          {/* LIMIT Clause Editor
+              - Sets maximum number of rows to return */}
           <LimitClauseEditor limit={queryState.limit} updateQuery={updateQuery} />
         </EditorRow>
 
-        {/* SELECT Section */}
+        {/* SELECT Clause Editor
+            - Allows selecting fields, aggregations and alias */}
         <SelectClauseEditor
           selectFields={queryState.selectFields}
           updateQuery={updateQuery}
           availableProperties={availableProperties}
         />
 
-        {/* WHERE Section */}
+        {/* WHERE Clause Editor
+            - Defines filters and conditions on data */}
         <WhereClauseEditor
           whereConditions={queryState.whereConditions}
           updateQuery={updateQuery}
           availableProperties={availableProperties}
         />
 
-        {/* GROUP BY Section */}
+        {/* GROUP BY Clause Editor
+            - Enables grouping the query result by specified fields */}
         <GroupByClauseEditor
           availablePropertiesForGrouping={availablePropertiesForGrouping}
           groupByTags={queryState.groupByTags}
-          groupByTime={queryState.groupByTime || ''}
           updateQuery={updateQuery}
         />
 
-        {/* HAVING Section */}
+        {/* HAVING Clause Editor
+            - Conditional logic after GROUP BY (only visible if groupBy is used) */}
         {isHavingVisible && (
           <HavingClauseEditor
             havingConditions={queryState.havingConditions}
@@ -66,27 +82,17 @@ export function SqlQueryBuilder({ builderState, onChange }: SqlQueryBuilderProps
           />
         )}
 
-        {/* ORDER BY Section */}
+        {/* ORDER BY Clause Editor
+            - Specifies sorting of the query results */}
         <OrderByClauseEditor
           orderByFields={queryState.orderByFields}
           updateQuery={updateQuery}
           availableProperties={availableProperties}
         />
-
-        {/* Timezone (if needed, uncomment and connect to queryState.timezone) */}
-        {/* <EditorField
-            label="Timezone"
-            width={30}
-            >
-            <Select
-            options={timezones}
-            value={queryState.timezone}
-            onChange={(option) => updateQuery({ timezone: option?.value || 'UTC' })}
-          />
-          </EditorField> */}
       </EditorRows>
 
-      {/* Query Preview */}
+      {/* Query Preview Display
+          - Shows the generated SQL query text and any validation errors */}
       <QueryPreviewDisplay preview={preview} errors={validationErrors} />
     </div>
   );

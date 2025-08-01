@@ -17,10 +17,19 @@ interface FromClauseEditorProps {
   ) => void;
 }
 
+/**
+ * Renders the "FROM" clause UI for the query builder.
+ * It allows users to select an asset model (data source view) from a dropdown list.
+ * Once model changed from the dropdown it resets the previous query fields (SELECT, WHERE, GROUP BY, ORDER BY)
+ * to their default/initial state.
+ */
 export const FromClauseEditor: React.FC<FromClauseEditorProps> = ({ assetModels, selectedModelId, updateQuery }) => {
   return (
     <EditorFieldGroup>
+      {/* Section label with tooltip */}
       <StyledLabel text="FROM" width={15} tooltip />
+
+      {/* Dropdown to select a model */}
       <EditorField label="" width={30}>
         <Select
           options={assetModels.map((model) => ({
