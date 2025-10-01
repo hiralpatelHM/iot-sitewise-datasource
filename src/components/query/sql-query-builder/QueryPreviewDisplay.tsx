@@ -1,38 +1,28 @@
 import React from 'react';
 import { Alert } from '@grafana/ui';
+import { ValidationError } from './types';
+import { css } from '@emotion/css';
 
 interface Props {
   preview: string;
-  errors: string[];
+  errors: ValidationError[];
 }
 
 // Style for the outer container wrapping the alert box
-const containerStyle: React.CSSProperties = {
-  marginTop: '1rem',
-};
-
-// Style for the list of error messages
-const errorListStyle: React.CSSProperties = {
-  paddingLeft: '1.2em',
-  margin: 0,
-  marginBottom: '0.5em',
-};
-
-// Style for each individual error message item
-const errorItemStyle: React.CSSProperties = {
-  fontSize: 12,
-};
+const containerStyle = css`
+  margin-top: 1rem;
+`;
 
 // Style for the query preview text block
-const previewStyle: React.CSSProperties = {
-  fontSize: 12,
-  padding: 0,
-  margin: 0,
-  backgroundColor: 'transparent',
-  border: 'none',
-  whiteSpace: 'pre-wrap',
-  wordBreak: 'break-word',
-};
+const previewStyle = css`
+  font-size: 12px;
+  padding: 0;
+  margin: 0;
+  background-color: transparent;
+  border: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+`;
 
 /**
  * Displays a query preview with optional error messages inside a styled Alert box.
@@ -49,18 +39,9 @@ export const QueryPreviewDisplay: React.FC<Props> = ({ preview, errors }) => {
   const severity = hasErrors ? 'error' : 'info';
 
   return (
-    <div style={containerStyle}>
+    <div className={containerStyle}>
       <Alert title={title} severity={severity}>
-        {hasErrors && (
-          <ul style={errorListStyle}>
-            {errors.map((error, index) => (
-              <li key={index} style={errorItemStyle}>
-                {error}
-              </li>
-            ))}
-          </ul>
-        )}
-        <pre style={previewStyle}>{preview}</pre>
+        <pre className={previewStyle}>{preview}</pre>
       </Alert>
     </div>
   );
