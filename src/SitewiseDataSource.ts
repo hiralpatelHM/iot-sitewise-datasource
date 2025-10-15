@@ -12,7 +12,7 @@ import { DataSourceWithBackend, getTemplateSrv } from '@grafana/runtime';
 import { SitewiseCache } from 'sitewiseCache';
 import { isListAssetsQuery, isPropertyQueryType, SitewiseOptions, SitewiseQuery, SiteWiseResolution } from './types';
 import { lastValueFrom, Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 import { frameToMetricFindValues } from 'utils';
 import { applyVariableForList, SitewiseVariableSupport } from 'variables';
 import { SitewiseQueryPaginator } from 'SiteWiseQueryPaginator';
@@ -205,6 +205,35 @@ export class DataSource extends DataSourceWithBackend<SitewiseQuery, SitewiseOpt
       .toObservable()
       .pipe(
         // Cache the last (done) response
+        map((response: DataQueryResponse) => {
+          const updatedData = response.data.map((frame) => {
+            const target = request.targets.find((t) => t.refId === frame.refId);
+            if (target?.bitExtract?.enabled && target.bitExtract.bitIndex >= 0) {
+              // Create a copy of the frame and transform values
+              const bitIndex = target.bitExtract.bitIndex;
+
+              const newFields = frame.fields.map((field: any) => {
+                if (field.type === 'number') {
+                  const values = field.values.toArray().map((v: any) => {
+                    const num = Number(v);
+                    return isNaN(num) ? v : (num >> bitIndex) & 1;
+                  });
+                  return { ...field, name: `Bit ${bitIndex}`, values };
+                }
+                return field;
+              });
+
+              return {
+                ...frame,
+                name: `Bit ${bitIndex} of ${target.propertyAlias || target.propertyId}`,
+                fields: newFields,
+              };
+            }
+            return frame;
+          });
+
+          return { ...response, data: updatedData };
+        }),
         tap({
           next: (response) => {
             if (response.state === LoadingState.Done) {

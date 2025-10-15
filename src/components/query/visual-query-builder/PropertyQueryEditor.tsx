@@ -22,6 +22,7 @@ import { InterpolatedResolutionSettings } from './InterpolatedResolutionSettings
 import { QueryOptions } from './QueryOptions';
 import type { SitewiseQueryEditorProps } from './types';
 import { getSelectableTemplateVariables } from '../../../variables';
+import { BitExtractSection } from './BitExtractSection';
 
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89abAB][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const ALL_HIERARCHIES = '*';
@@ -463,6 +464,10 @@ export const PropertyQueryEditor = ({ query, datasource, onChange }: SitewiseQue
           </EditorFieldGroup>
         </EditorRow>
       )}
+
+      <EditorField label="Bit Extraction">
+        <BitExtractSection query={query} onChange={onChange} />
+      </EditorField>
     </>
   );
 };
