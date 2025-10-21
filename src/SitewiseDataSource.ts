@@ -214,18 +214,23 @@ export class DataSource extends DataSourceWithBackend<SitewiseQuery, SitewiseOpt
 
               const newFields = frame.fields.map((field: any) => {
                 if (field.type === 'number') {
-                  const values = field.values.toArray().map((v: any) => {
+                  const newValues = field.values.toArray().map((v: any) => {
                     const num = Number(v);
-                    return isNaN(num) ? v : (num >> bitIndex) & 1;
+                    return Number.isFinite(num) ? (num >> bitIndex) & 1 : v;
                   });
-                  return { ...field, name: `Bit ${bitIndex}`, values };
+
+                  return {
+                    ...field,
+                    name: `${field.name || 'Value'} (Bit ${bitIndex})`,
+                    values: newValues,
+                  };
                 }
                 return field;
               });
 
               return {
                 ...frame,
-                name: `Bit ${bitIndex} of ${target.propertyAlias || target.propertyId}`,
+                name: `${target.propertyAlias || target.propertyId} - Bit ${bitIndex}`,
                 fields: newFields,
               };
             }

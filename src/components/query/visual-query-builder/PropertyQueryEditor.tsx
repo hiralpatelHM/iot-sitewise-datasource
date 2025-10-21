@@ -464,10 +464,7 @@ export const PropertyQueryEditor = ({ query, datasource, onChange }: SitewiseQue
           </EditorFieldGroup>
         </EditorRow>
       )}
-
-      <EditorField label="Bit Extraction">
-        <BitExtractSection query={query} onChange={onChange} />
-      </EditorField>
+      {showProp && <BitExtractSection query={query} onChange={onChange} />}
     </>
   );
 };
