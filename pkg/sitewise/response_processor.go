@@ -37,134 +37,122 @@ func frameResponse(ctx context.Context, query models.BaseQuery, data framer.Fram
 	if err != nil {
 		return nil, err
 	}
-	propertyNameMap := map[string]string{}
-	var assetID string
-	if len(query.AssetIds) > 0 {
-		assetID = strings.TrimSpace(query.AssetIds[0])
+	if requiresJSONParsing(query, frames) {
+		return ParseJSONFields(ctx, query, sw, frames), nil
 	}
-	if assetID != "" {
+	return frames, nil
+}
 
-		// 1️⃣ Describe Asset (SDK v2)
-		assetResp, err := sw.DescribeAsset(ctx, &iotsitewise.DescribeAssetInput{
-			AssetId: aws.String(assetID),
-		})
-		if err != nil {
-			backend.Logger.Warn("DescribeAsset failed", "err", err)
-		} else {
-			modelID := aws.StringValue(assetResp.AssetModelId)
-			backend.Logger.Info("DescribeAsset → modelID", "modelID", modelID)
+func requiresJSONParsing(query models.BaseQuery, frames data.Frames) bool {
 
-			// 2️⃣ Describe Asset Model
-			if modelID != "" {
-				modelResp, err := sw.DescribeAssetModel(ctx, &iotsitewise.DescribeAssetModelInput{
+	switch query.QueryType {
+	case models.QueryTypePropertyValueHistory,
+		models.QueryTypePropertyAggregate,
+		models.QueryTypePropertyValue:
+	default:
+		return false
+	}
+
+	if len(frames) == 0 {
+		return false
+	}
+
+	first := frames[0]
+	for _, field := range first.Fields {
+		if field.Type() != data.FieldTypeString || field.Len() == 0 {
+			continue
+		}
+
+		raw, ok := field.At(0).(string)
+		if !ok || raw == "" {
+			continue
+		}
+
+		if strings.HasPrefix(raw, "{") && strings.Contains(raw, "diagnostics") {
+			return true
+		}
+	}
+
+	return false
+}
+
+func ParseJSONFields(
+	ctx context.Context,
+	query models.BaseQuery,
+	sw client.SitewiseAPIClient,
+	frames data.Frames,
+) data.Frames {
+
+	// ------------------------------------------------------------
+	// Load asset property names ONCE (not inside loops)
+	// ------------------------------------------------------------
+	propertyNameMap := map[string]string{}
+
+	if len(query.AssetIds) > 0 {
+		assetID := strings.TrimSpace(query.AssetIds[0])
+
+		if assetID != "" {
+			asset, err := sw.DescribeAsset(ctx, &iotsitewise.DescribeAssetInput{
+				AssetId: aws.String(assetID),
+			})
+			if err == nil && asset.AssetModelId != nil {
+				modelID := aws.StringValue(asset.AssetModelId)
+
+				model, err := sw.DescribeAssetModel(ctx, &iotsitewise.DescribeAssetModelInput{
 					AssetModelId: aws.String(modelID),
 				})
-				if err != nil {
-					backend.Logger.Warn("DescribeAssetModel failed", "err", err)
-				} else {
-					// 3️⃣ Build propertyId → name map
-					for _, prop := range modelResp.AssetModelProperties {
-						if prop.Id != nil && prop.Name != nil {
-							propertyNameMap[*prop.Id] = *prop.Name
+				if err == nil {
+					for _, p := range model.AssetModelProperties {
+						if p.Id != nil && p.Name != nil {
+							propertyNameMap[*p.Id] = *p.Name
 						}
 					}
-
-					backend.Logger.Info("propertyNameMap built", "count", len(propertyNameMap))
 				}
 			}
 		}
 	}
 
-	if len(propertyNameMap) == 0 {
-		backend.Logger.Warn("frameResponse: propertyNameMap EMPTY (fallback to propertyId)")
-	}
-	parsedFrames := ParseJSONFields(frames, propertyNameMap)
-	return parsedFrames, nil
-}
-
-// var propertyNameMap = map[string]string{
-// 	"b86709fc-13ed-4e62-a5b9-6e4f4a750123": "power",
-// 	"b558fa41-5b41-49b6-b87f-550646fdcef8": "torque",
-// 	"5962c674-5bf7-4bcc-8c4c-fa3923366baa": "temperature",
-// }
-
-func FindFieldByName(fields []*data.Field, name string) *data.Field {
-	for _, f := range fields {
-		if f.Name == name {
-			return f
-		}
-	}
-	return nil
-}
-
-func ParseJSONFields(frames data.Frames, propertyNameMap map[string]string) data.Frames {
+	// ------------------------------------------------------------
+	// Now parse frames (much cleaner)
+	// ------------------------------------------------------------
 	newFrames := data.Frames{}
+
 	for _, frame := range frames {
-		newFields := []*data.Field{}
+		fields := append([]*data.Field{}, frame.Fields...)
 		jsonParsed := false
 
-		for _, field := range frame.Fields {
+		for _, f := range frame.Fields {
 
-			newFields = append(newFields, field)
+			rowCount := f.Len()
 
-			if field.Type() != data.FieldTypeString {
-				continue
-			}
-
-			rowCount := field.Len()
-
-			// -------------------------
-			// STEP 1 → Detect JSON keys
-			// -------------------------
-			// We inspect the first valid row only.
-			var detectedKeys map[string]interface{}
-
-			for r := 0; r < rowCount; r++ {
-				rawStr, _ := field.At(r).(string)
-				if rawStr == "" {
-					continue
-				}
-
-				var temp map[string]interface{}
-				if json.Unmarshal([]byte(rawStr), &temp) == nil {
-					detectedKeys = temp
-					break
-				}
-			}
-
-			if detectedKeys == nil {
-				continue
-			}
+			// Use first row to find keys
+			var firstObj map[string]interface{}
+			raw0, _ := f.At(0).(string)
+			_ = json.Unmarshal([]byte(raw0), &firstObj)
 
 			jsonParsed = true
 
-			// ---------------------------------
-			// STEP 2 → Create fields dynamically
-			// ---------------------------------
 			jsonFields := map[string]*data.Field{}
 
-			for key, val := range detectedKeys {
-
-				// Skip diagnostics – handled later
-				if key == "diagnostics" {
+			// Create fields based on first row
+			for k, v := range firstObj {
+				if k == "timestamp" || k == "diagnostics" {
 					continue
 				}
 
-				switch val.(type) {
+				switch v.(type) {
 				case float64:
-					jsonFields[key] = data.NewField(key, nil, make([]float64, rowCount))
+					jsonFields[k] = data.NewField(k, nil, make([]float64, rowCount))
 				case string:
-					jsonFields[key] = data.NewField(key, nil, make([]string, rowCount))
+					jsonFields[k] = data.NewField(k, nil, make([]string, rowCount))
 				case bool:
-					jsonFields[key] = data.NewField(key, nil, make([]bool, rowCount))
+					jsonFields[k] = data.NewField(k, nil, make([]bool, rowCount))
 				}
 			}
 
-			// -------------------------
-			// STEP 3 → Row-by-row parse
-			// -------------------------
-			for r := 0; r < rowCount; r++ {
-				rawStr, _ := field.At(r).(string)
+			// Parse rows
+			for i := 0; i < rowCount; i++ {
+				rawStr, _ := f.At(i).(string)
 				if rawStr == "" {
 					continue
 				}
@@ -174,36 +162,22 @@ func ParseJSONFields(frames data.Frames, propertyNameMap map[string]string) data
 					continue
 				}
 
-				// ---- Fill simple fields ----
-				for key, val := range obj {
-					if f, exists := jsonFields[key]; exists {
-						switch v := val.(type) {
-						case float64:
-							f.Set(r, v)
-						case string:
-							f.Set(r, v)
-						case bool:
-							f.Set(r, v)
-						}
+				// Simple fields
+				for k, v := range obj {
+					if fld, ok := jsonFields[k]; ok {
+						fld.Set(i, v)
 					}
 				}
 
-				// -----------------------------
-				// STEP 4 → Diagnostics handling
-				// -----------------------------
-				diagVal, ok := obj["diagnostics"]
+				// Diagnostics → contrib fields
+				diagArr, ok := obj["diagnostics"].([]interface{})
 				if !ok {
 					continue
 				}
 
-				diagArr, ok := diagVal.([]interface{})
-				if !ok {
-					continue
-				}
-				contribValues := map[string]float64{}
+				contrib := map[string]float64{}
 
 				for _, item := range diagArr {
-					backend.Logger.Info("inside diagArr")
 					diagObj, ok := item.(map[string]interface{})
 					if !ok {
 						continue
@@ -215,52 +189,48 @@ func ParseJSONFields(frames data.Frames, propertyNameMap map[string]string) data
 						continue
 					}
 
-					propertyID := parts[1]
-
-					lookupID := propertyID
-
-					readable := propertyID
-					if mapped, ok := propertyNameMap[lookupID]; ok {
-						readable = mapped
+					propID := parts[len(parts)-1]
+					propName := propertyNameMap[propID]
+					if propName == "" {
+						propName = propID
 					}
-					fieldName := "contrib_" + readable
 
-					// Create field if missing
+					fieldName := "contrib_" + propName
+
 					if _, exists := jsonFields[fieldName]; !exists {
 						jsonFields[fieldName] = data.NewField(fieldName, nil, make([]float64, rowCount))
 					}
 
-					// Set value
 					if v, ok := diagObj["value"].(float64); ok {
-						contribValues[fieldName] = v
+						contrib[fieldName] = v
 					}
 				}
+
+				// Normalize %
 				total := 0.0
-				for _, v := range contribValues {
+				for _, v := range contrib {
 					total += v
 				}
 
 				if total > 0 {
-					for fieldName, rawValue := range contribValues {
-						pct := (rawValue / total) * 100.0
-						jsonFields[fieldName].Set(r, pct)
+					for name, v := range contrib {
+						jsonFields[name].Set(i, (v/total)*100.0)
 					}
 				}
 			}
 
-			// -------------------------------------
-			// STEP 5 → Append all parsed JSON fields
-			// -------------------------------------
-			for _, f := range jsonFields {
-				newFields = append(newFields, f)
+			// Add fields to frame
+			for _, fld := range jsonFields {
+				fields = append(fields, fld)
 			}
 
-			break // Only handle first string field
+			break // only one JSON field
 		}
 
-		newFrame := data.NewFrame(frame.Name, newFields...)
-		newFrame.Meta = frame.Meta
-		newFrames = append(newFrames, newFrame)
+		outFrame := data.NewFrame(frame.Name, fields...)
+		outFrame.Meta = frame.Meta
+
+		newFrames = append(newFrames, outFrame)
 
 		if jsonParsed {
 			backend.Logger.Info("Parsed JSON in frame", "frame", frame.Name)
