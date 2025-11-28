@@ -38,7 +38,7 @@ func frameResponse(ctx context.Context, query models.BaseQuery, data framer.Fram
 		if len(query.AssetIds) > 0 {
 			assetID = strings.TrimSpace(query.AssetIds[0])
 		}
-		parsedFrames := ParseJSONFields(ctx, frames, sw, assetID)
+		parsedFrames := ParseJSONFields(ctx, frames, rp, assetID)
 		return parsedFrames, nil
 	}
 

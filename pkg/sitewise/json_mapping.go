@@ -5,47 +5,34 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/service/iotsitewise"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"github.com/grafana/iot-sitewise-datasource/pkg/models"
-	"github.com/grafana/iot-sitewise-datasource/pkg/sitewise/client"
+	"github.com/grafana/iot-sitewise-datasource/pkg/sitewise/resource"
 )
 
-func BuildPropertyNameMap(ctx context.Context, sw client.SitewiseAPIClient, assetID string) map[string]string {
+func BuildPropertyNameMap(ctx context.Context, resources resource.ResourceProvider, assetID string) map[string]string {
 	propertyNameMap := map[string]string{}
-	if assetID != "" {
+	if assetID == "" {
+		backend.Logger.Warn("BuildPropertyNameMap: empty assetId")
+		return propertyNameMap
+	}
 
-		assetResp, err := sw.DescribeAsset(ctx, &iotsitewise.DescribeAssetInput{
-			AssetId: aws.String(assetID),
-		})
-		if err != nil {
-			backend.Logger.Warn("DescribeAsset failed", "err", err)
-		} else {
-			modelID := aws.StringValue(assetResp.AssetModelId)
-			backend.Logger.Info("DescribeAsset → modelID", "modelID", modelID)
+	modelResp, err := resources.AssetModel(ctx)
 
-			if modelID != "" {
-				modelResp, err := sw.DescribeAssetModel(ctx, &iotsitewise.DescribeAssetModelInput{
-					AssetModelId: aws.String(modelID),
-				})
-				if err != nil {
-					backend.Logger.Warn("DescribeAssetModel failed", "err", err)
-				} else {
-					for _, prop := range modelResp.AssetModelProperties {
-						if prop.Id != nil && prop.Name != nil {
-							propertyNameMap[*prop.Id] = *prop.Name
-						}
-					}
-				}
-			}
+	if err != nil {
+		backend.Logger.Warn("DescribeAssetModel failed", "err", err)
+		return propertyNameMap
+	}
+
+	for _, prop := range modelResp.AssetModelProperties {
+		if prop.Id != nil && prop.Name != nil {
+			propertyNameMap[*prop.Id] = *prop.Name
 		}
-
 	}
 
 	if len(propertyNameMap) == 0 {
-		backend.Logger.Warn("frameResponse: propertyNameMap EMPTY (fallback to propertyId)")
+		backend.Logger.Warn("BuildPropertyNameMap: No properties found for asset", "assetID", assetID)
 	}
 
 	return propertyNameMap
@@ -65,13 +52,13 @@ func isRequireJSONParsing(query models.BaseQuery) bool {
 func ParseJSONFields(
 	ctx context.Context,
 	frames data.Frames,
-	sw client.SitewiseAPIClient,
+	resources resource.ResourceProvider,
 	assetID string,
 ) data.Frames {
 	backend.Logger.Info("ParseJSONFields: starting JSON parsing", "assetID", assetID)
 
 	// Build property name map once
-	propertyNameMap := BuildPropertyNameMap(ctx, sw, assetID)
+	propertyNameMap := BuildPropertyNameMap(ctx, resources, assetID)
 	newFrames := data.Frames{}
 
 	for _, frame := range frames {
